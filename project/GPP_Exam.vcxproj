@@ -182,8 +182,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Data\EBlackboard.h" />
     <ClInclude Include="Plugin.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="SteeringBehaviors\CombinedSteeringBehaviors.h" />
+    <ClInclude Include="SteeringBehaviors\SteeringBehaviors.h" />
+    <ClInclude Include="SteeringBehaviors\SteeringHelpers.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Plugin.cpp" />
@@ -191,6 +195,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="SteeringBehaviors\CombinedSteeringBehaviors.cpp" />
+    <ClCompile Include="SteeringBehaviors\SteeringBehaviors.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
