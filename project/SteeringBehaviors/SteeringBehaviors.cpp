@@ -8,7 +8,7 @@ using namespace Elite;
 
 //SEEK
 //****
-SteeringPlugin_Output Seek::CalculateSteering(float deltaT, AgentInfo pAgent)
+SteeringPlugin_Output Seek::CalculateSteering( AgentInfo pAgent)
 {
 	SteeringPlugin_Output steering = {};
 
@@ -19,7 +19,7 @@ SteeringPlugin_Output Seek::CalculateSteering(float deltaT, AgentInfo pAgent)
 	return steering;
 }
 
-SteeringPlugin_Output Flee::CalculateSteering(float deltaT, AgentInfo pAgent)
+SteeringPlugin_Output Flee::CalculateSteering( AgentInfo pAgent)
 {
 	SteeringPlugin_Output steering = {};
 	const Vector2 toTarget = pAgent.Position - m_Target.Position;
@@ -33,7 +33,7 @@ SteeringPlugin_Output Flee::CalculateSteering(float deltaT, AgentInfo pAgent)
 	return steering;
 }
 
-SteeringPlugin_Output Arrive::CalculateSteering(float deltaT, AgentInfo pAgent)
+SteeringPlugin_Output Arrive::CalculateSteering( AgentInfo pAgent)
 {
 	SteeringPlugin_Output steering = {};
 	const Vector2 toTarget = m_Target.Position - pAgent.Position;
@@ -59,7 +59,7 @@ SteeringPlugin_Output Arrive::CalculateSteering(float deltaT, AgentInfo pAgent)
 
 }
 
-SteeringPlugin_Output Face::CalculateSteering(float deltaT, AgentInfo pAgent)
+SteeringPlugin_Output Face::CalculateSteering( AgentInfo pAgent)
 {
 	// Disable this to avoid issues
 	//pAgent.SetAutoOrient(false);
@@ -98,7 +98,7 @@ SteeringPlugin_Output Face::CalculateSteering(float deltaT, AgentInfo pAgent)
 	return steering;
 }
 
-SteeringPlugin_Output Wander::CalculateSteering(float deltaT, AgentInfo pAgent)
+SteeringPlugin_Output Wander::CalculateSteering( AgentInfo pAgent)
 {
 	const Vector2 centerPointWanderCirlce{
 		 pAgent.Position+ (pAgent.LinearVelocity.GetNormalized() * m_OffsetDistance)
@@ -109,7 +109,7 @@ SteeringPlugin_Output Wander::CalculateSteering(float deltaT, AgentInfo pAgent)
 	pointOnCircleRandom += centerPointWanderCirlce;
 
 	m_Target = pointOnCircleRandom;
-	return Seek::CalculateSteering(deltaT, pAgent);
+	return Seek::CalculateSteering( pAgent);
 }
 
 void Wander::SetWanderOffset(float offset)
@@ -127,22 +127,22 @@ void Wander::SetMaxAngleChange(float rad)
 	m_WanderAngle = rad;
 }
 
-SteeringPlugin_Output Pursuit::CalculateSteering(float deltaT, AgentInfo pAgent)
+SteeringPlugin_Output Pursuit::CalculateSteering( AgentInfo pAgent)
 {
 	const Vector2 distanceBetween = m_Target.Position - pAgent.Position;
 	const int updatesAhead = distanceBetween.Magnitude() / pAgent.MaxLinearSpeed;
 	const Vector2 futurePosition = m_Target.Position + m_Target.LinearVelocity * updatesAhead;
 	m_Target = futurePosition;
 
-	return Seek::CalculateSteering(deltaT, pAgent);
+	return Seek::CalculateSteering( pAgent);
 }
 
-SteeringPlugin_Output Evade::CalculateSteering(float deltaT, AgentInfo pAgent)
+SteeringPlugin_Output Evade::CalculateSteering( AgentInfo pAgent)
 {
 	const Vector2 distanceBetween = m_Target.Position - pAgent.Position;
 	const int updatesAhead = float(distanceBetween.Magnitude()) / (pAgent.MaxLinearSpeed * abs(m_Target.LinearVelocity.x));
 	const Vector2 futurePosition = m_Target.Position + m_Target.LinearVelocity * updatesAhead;
 	m_Target = futurePosition;
 
-	return Flee::CalculateSteering(deltaT, pAgent);
+	return Flee::CalculateSteering( pAgent);
 }

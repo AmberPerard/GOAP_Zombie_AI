@@ -9,13 +9,14 @@ class BaseGoapAction
 {
 public:
 	BaseGoapAction() = default;
+	BaseGoapAction(const std::string& name, const int cost);
 	void DoReset();
 	virtual void Reset();
 	virtual ~BaseGoapAction();
 	
-	virtual bool checkProceduralPreconditions(AgentInfo agentInfo);
+	virtual bool checkProceduralPreconditions(Elite::Blackboard* pBlackboard);
 	virtual bool RequiresInRange();
-	virtual bool Execute(Elite::Blackboard* m_pBlackboard) { return true; }
+	virtual bool Execute(Elite::Blackboard* pBlackboard) { return true; }
 	virtual bool isDone();
 
 	virtual void SetPrecondition(const std::string& key, const bool value) { m_Preconditions[key] = value; }

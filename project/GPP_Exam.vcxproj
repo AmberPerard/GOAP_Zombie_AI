@@ -184,6 +184,7 @@
   <ItemGroup>
     <ClInclude Include="BaseGoapAction.h" />
     <ClInclude Include="Data\EBlackboard.h" />
+    <ClInclude Include="GoapActions.h" />
     <ClInclude Include="Plugin.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="SteeringBehaviors\SteeringBehaviors.h" />
@@ -191,6 +192,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseGoapAction.cpp" />
+    <ClCompile Include="GoapActions.cpp" />
     <ClCompile Include="Plugin.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
