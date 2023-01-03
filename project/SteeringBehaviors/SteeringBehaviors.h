@@ -21,7 +21,7 @@ public:
 	ISteeringBehavior() = default;
 	virtual ~ISteeringBehavior() = default;
 
-	virtual SteeringOutput CalculateSteering(float deltaT, AgentInfo* pAgent) = 0;
+	virtual SteeringPlugin_Output CalculateSteering(float deltaT, AgentInfo pAgent) = 0;
 
 	//Seek Functions
 	void SetTarget(const TargetData& target) { m_Target = target; }
@@ -45,7 +45,7 @@ public:
 	virtual ~Seek() = default;
 
 	//Seek Behaviour
-	SteeringOutput CalculateSteering(float deltaT, AgentInfo* pAgent) override;
+	SteeringPlugin_Output CalculateSteering(float deltaT, AgentInfo pAgent) override;
 };
 
 ///////////////////////////////////////
@@ -57,7 +57,7 @@ public:
 	Flee() = default;
 	virtual ~Flee() = default;
 
-	SteeringOutput CalculateSteering(float deltaT, AgentInfo* pAgent) override;
+	SteeringPlugin_Output CalculateSteering(float deltaT, AgentInfo pAgent) override;
 	void SetFleeRadius(float fleeRadius) { m_FleeRadius = fleeRadius; }
 	float GetFleeRadius() const { return m_FleeRadius; }
 private:
@@ -74,7 +74,7 @@ public:
 	Arrive() = default;
 	virtual ~Arrive() = default;
 
-	SteeringOutput CalculateSteering(float deltaT, AgentInfo* pAgent) override;
+	SteeringPlugin_Output CalculateSteering(float deltaT, AgentInfo pAgent) override;
 	void SetSlowRadius(float slowRadius) { m_SlowRadius = slowRadius; }
 	void SetTargetRadius(float targetRadius) { m_TargetRadius = targetRadius; }
 private:
@@ -91,7 +91,7 @@ public:
 	Face() = default;
 	virtual ~Face() = default;
 
-	SteeringOutput CalculateSteering(float deltaT, AgentInfo* pAgent) override;
+	SteeringPlugin_Output CalculateSteering(float deltaT, AgentInfo pAgent) override;
 };
 
 ///////////////////////////////////////
@@ -104,7 +104,7 @@ public:
 	virtual ~Wander() = default;
 
 	//wanderer behaviour
-	SteeringOutput CalculateSteering(float deltaT, AgentInfo* pAgent) override;
+	SteeringPlugin_Output CalculateSteering(float deltaT, AgentInfo pAgent) override;
 
 	void SetWanderOffset(float offset);
 	void SetWanderRadius(float radius);
@@ -126,7 +126,7 @@ public:
 	Pursuit() = default;
 	virtual ~Pursuit() = default;
 
-	SteeringOutput CalculateSteering(float deltaT, AgentInfo* pAgent) override;
+	SteeringPlugin_Output CalculateSteering(float deltaT, AgentInfo pAgent) override;
 };
 
 ///////////////////////////////////////
@@ -138,7 +138,7 @@ public:
 	Evade() = default;
 	virtual ~Evade() = default;
 
-	SteeringOutput CalculateSteering(float deltaT, AgentInfo* pAgent) override;
+	SteeringPlugin_Output CalculateSteering(float deltaT, AgentInfo pAgent) override;
 };
 
 

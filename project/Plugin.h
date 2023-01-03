@@ -1,6 +1,7 @@
 #pragma once
 #include "IExamPlugin.h"
 #include "Exam_HelperStructs.h"
+#include "SteeringBehaviors/SteeringBehaviors.h"
 
 class IBaseInterface;
 class IExamInterface;
@@ -34,6 +35,7 @@ private:
 	bool m_RemoveItem = false; //Demo purpose
 	float m_AngSpeed = 0.f; //Demo purpose
 
+	Wander* m_pwander = {};
 	UINT m_InventorySlot = 0;
 };
 
