@@ -18,8 +18,8 @@ GOAP::Action_Wander::~Action_Wander()
 
 bool GOAP::Action_Wander::checkProceduralPreconditions(Elite::Blackboard* pBlackboard)
 {
-
-		return pBlackboard->GetData("AgentInfo", m_AgentInfo)
+	return BaseGoapAction::checkProceduralPreconditions(pBlackboard)
+		&& pBlackboard->GetData("AgentInfo", m_AgentInfo)
 		&& pBlackboard->GetData("Steering", m_pSteering)
 		&& pBlackboard->GetData("Interface", m_pInterface);
 }
@@ -49,7 +49,8 @@ GOAP::Action_MoveTo::~Action_MoveTo()
 
 bool GOAP::Action_MoveTo::checkProceduralPreconditions(Elite::Blackboard* pBlackboard)
 {
-	return pBlackboard->GetData("Target", m_Target)
+	return BaseGoapAction::checkProceduralPreconditions(pBlackboard)
+		&& pBlackboard->GetData("Target", m_Target)
 		&& pBlackboard->GetData("AgentInfo", m_AgentInfo)
 		&& pBlackboard->GetData("Steering", m_pSteering)
 		&& pBlackboard->GetData("Interface", m_pInterface);

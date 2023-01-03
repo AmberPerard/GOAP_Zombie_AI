@@ -6,6 +6,8 @@
     <ClCompile Include="SteeringBehaviors\SteeringBehaviors.cpp" />
     <ClCompile Include="BaseGoapAction.cpp" />
     <ClCompile Include="GoapActions.cpp" />
+    <ClCompile Include="WorldState.cpp" />
+    <ClCompile Include="GoapAstart.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Plugin.h" />
@@ -15,5 +17,7 @@
     <ClInclude Include="Data\EBlackboard.h" />
     <ClInclude Include="BaseGoapAction.h" />
     <ClInclude Include="GoapActions.h" />
+    <ClInclude Include="WorldState.h" />
+    <ClInclude Include="GoapAstart.h" />
   </ItemGroup>
 </Project>
