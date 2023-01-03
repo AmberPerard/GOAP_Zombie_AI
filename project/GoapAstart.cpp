@@ -1,113 +1,118 @@
 #include "stdafx.h"
 #include "GoapAstart.h"
 
+
 std::vector<BaseGoapAction*> GoapAstart::FindCurrentActions(const WorldState startState,
 	const WorldState desiredState, std::vector<BaseGoapAction*> availableActions)
 {
-	std::vector<BaseGoapAction*> path{};
-	std::vector<GoapNode> openList{};
-	std::vector<GoapNode> closedList{};
-	GoapNode currentRecord{};
+	// Feasible we'd re-use a planner, so clear out the prior results
+	m_OpenList.clear();
+	m_ClosedList.clear();
 
-	currentRecord.worldState = startState;
-//	currentRecord.pConnection = nullptr;
-	currentRecord.costSoFar = 0.0f;
-	currentRecord.estimatedTotalCost = GetHeuristicCost(&startState, &desiredState);
-	openList.push_back(currentRecord);
+	GoapNode currentRecord{startState,0,GetHeuristicCost(&startState, &desiredState),0,nullptr};
+	m_OpenList.push_back(std::move(currentRecord));
 
-	while (!openList.empty())
+	while (!m_OpenList.empty())
 	{
-		currentRecord = *std::min_element(openList.begin(), openList.end());
+		currentRecord = PopAndClose();
 
-		//check if current Connection lead to the end node
+		//check if current state is the goal state
 		if (currentRecord.worldState == desiredState)
 		{
-			closedList.push_back(currentRecord);
-			break;
-		}
-		for (const auto& connection : m_pGraph->GetNodeConnections(currentRecord.pNode))
-		{
-			const auto totalCostSoFar = currentRecord.costSoFar + connection->GetCost();
-			const auto estimatedTotalCost = totalCostSoFar + GetHeuristicCost(m_pGraph->GetNode(connection->GetTo()), pGoalNode);
-
-			bool shouldSkipConnection = false;
-			//check closed list if connection to that node already exists
-			for (auto& closedNode : closedList)
+			std::vector<BaseGoapAction*> plan;
+			do
 			{
-				if (closedNode.pNode == m_pGraph->GetNode(connection->GetTo()))
+				plan.emplace_back(currentRecord.previousAction);
+
+				auto it = std::find_if(begin(m_OpenList), end(m_OpenList), [&](const GoapNode& n) { return n.id == currentRecord.parentId; });
+
+				// Node is not on the open list, search on closed list
+				if (it == end(m_OpenList))
 				{
-					//if the cost is equal or lower, skip the connection
-					//the equal prevents it form infinite looping and having a missing connections
-					if (closedNode.costSoFar <= totalCostSoFar)
+					it = std::find_if(begin(m_ClosedList), end(m_ClosedList), [&](const GoapNode& n) { return n.id == currentRecord.parentId; });
+				}
+				currentRecord = *it;
+			} while (currentRecord.parentId != 0);
+
+			return plan;
+		}
+		for (const auto& action : availableActions)
+		{
+
+			if (action->ConditionsMetByWorld(currentRecord.worldState))
+			{
+				WorldState outcomeWorld = action->ApplyActionOnWorld(currentRecord.worldState);
+
+				if (IsMemberOfClosedList(outcomeWorld))
+				{
+					continue;
+				}
+				const auto totalCostSoFar = currentRecord.costSoFar + action->GetCost();
+				const auto estimatedTotalCost = totalCostSoFar + GetHeuristicCost(&outcomeWorld, &desiredState);
+				auto outcomeNode = IsMemberOfOpenList(outcomeWorld);
+				if (outcomeNode == end(m_OpenList))
+				{
+					GoapNode newNode(outcomeWorld, totalCostSoFar, estimatedTotalCost, currentRecord.id, action);
+					AddToOpenList(std::move(newNode));
+				}
+				else
+				{
+					if (currentRecord.costSoFar + action->GetCost() < outcomeNode->costSoFar)
 					{
-						shouldSkipConnection = true;
-						continue;
+						outcomeNode->parentId = currentRecord.id;
+						outcomeNode->costSoFar = currentRecord.costSoFar + action->GetCost();
+						outcomeNode->estimatedTotalCost = GetHeuristicCost(&outcomeWorld, &desiredState);
+						outcomeNode->previousAction = action;
+
+						std::sort(begin(m_OpenList), end(m_OpenList));
 					}
-					closedList.erase(std::remove(closedList.begin(), closedList.end(), closedNode));
 				}
 			}
-
-			if (shouldSkipConnection == false)
-			{
-				//check open list for that connection to that node already exists
-				for (const auto& openListNode : openList)
-				{
-					if (openListNode.pNode == m_pGraph->GetNode(connection->GetTo()))
-					{
-						//if the cost is equal or lower, skip the connection
-						//the equal prevents it form infinite looping and having a missing connections
-						if (openListNode.costSoFar <= totalCostSoFar)
-						{
-							shouldSkipConnection = true;
-							continue;
-						}
-						openList.erase(std::remove(openList.begin(), openList.end(), openListNode));
-					}
-				}
-			}
-			if (shouldSkipConnection == false)
-			{
-				NodeRecord newNode;
-				newNode.pNode = m_pGraph->GetNode(connection->GetTo());
-				newNode.costSoFar = totalCostSoFar;
-				newNode.estimatedTotalCost = estimatedTotalCost;
-				newNode.pConnection = connection;
-
-				openList.push_back(newNode);
-			}
-		}
-
-		openList.erase(std::remove(openList.begin(), openList.end(), currentRecord));
-		closedList.push_back(currentRecord);
-
-	}
-	//check if path doesn't lead to end point
-	if (currentRecord.pNode != pGoalNode)
-	{
-		return path;
-	}
-
-	//trace back the path from the end to the beginning
-	while (currentRecord.pNode != pStartNode)
-	{
-		auto previousNode = currentRecord.pConnection->GetFrom();
-		path.push_back(currentRecord.pNode);
-
-		for (auto& closedListRecord : closedList)
-		{
-			if (closedListRecord.pNode == m_pGraph->GetNode(previousNode))
-			{
-				currentRecord = closedListRecord;
-				break;
-			}
-
 		}
 	}
-	path.push_back(pStartNode);
-	std::reverse(path.begin(), path.end());
-	return path;
+
+	// If there's nothing left to evaluate, then we have no possible path left
+	throw std::runtime_error("A* planner could not find a path from start to goal");
+}
+
+bool GoapAstart::IsMemberOfClosedList(const WorldState& worldState) const
+{
+	return std::find_if(begin(m_ClosedList), end(m_ClosedList), [&](const GoapNode& node) { return node.worldState == worldState; }) != end(m_ClosedList);
+}
+std::vector<GoapNode>::iterator GoapAstart::IsMemberOfOpenList(const WorldState& worldState)
+{
+	return std::find_if(begin(m_OpenList), end(m_OpenList), [&](const GoapNode& node) { return node.worldState == worldState; });
+}
+
+void GoapAstart::AddToOpenList(GoapNode&& n)
+{
+	// insert maintaining sort order
+	auto it = std::lower_bound(begin(m_OpenList), end(m_OpenList), n);
+	m_OpenList.emplace(it, std::move(n));
 }
 
 int GoapAstart::GetHeuristicCost(const WorldState* startState, const WorldState* desiredState)
 {
+	int result{};
+
+	for (const auto& kv : desiredState->m_Conditions)
+	{
+		auto it = startState->m_Conditions.find(kv.first);
+		if (it == std::end(startState->m_Conditions) || it->second != kv.second)
+		{
+			++result;
+		}
+	}
+
+	return result;
 }
+
+GoapNode& GoapAstart::PopAndClose()
+{
+	assert(!m_OpenList.empty());
+	m_ClosedList.push_back(std::move(m_OpenList.front()));
+	m_OpenList.erase(m_OpenList.begin());
+
+	return m_ClosedList.back();
+}
+

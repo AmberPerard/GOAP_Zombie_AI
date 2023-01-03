@@ -7,11 +7,8 @@ BaseGoapAction::BaseGoapAction(const std::string& name, const int cost)
 {
 }
 
-void BaseGoapAction::DoReset()
+BaseGoapAction::~BaseGoapAction()
 {
-	m_InRange = false;
-	m_Target = { 0,0 };
-	Reset();
 }
 
 bool BaseGoapAction::checkProceduralPreconditions(Elite::Blackboard* pBlackboard)
@@ -28,4 +25,26 @@ bool BaseGoapAction::checkProceduralPreconditions(Elite::Blackboard* pBlackboard
         }
     }
     return true;
+}
+
+bool BaseGoapAction::ConditionsMetByWorld(const WorldState& worldState)
+{
+    for(const auto& preconditions: m_Preconditions)
+    {
+	   if( worldState.getCondition(preconditions.first) != preconditions.second)
+	   {
+           return false;
+	   }
+    }
+    return true;
+}
+
+WorldState BaseGoapAction::ApplyActionOnWorld(const WorldState& worldState) const
+{
+    WorldState tmpWorldState{ worldState };
+    for(const auto& effect: m_Effects)
+    {
+        tmpWorldState.SetCodition(effect.first, effect.second);
+    }
+    return tmpWorldState;
 }

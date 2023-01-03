@@ -3,6 +3,7 @@
 #include <IExamInterface.h>
 #include <unordered_map>
 
+#include "WorldState.h"
 #include "Data/EBlackboard.h"
 
 class BaseGoapAction
@@ -10,26 +11,25 @@ class BaseGoapAction
 public:
 	BaseGoapAction() = default;
 	BaseGoapAction(const std::string& name, const int cost);
-	void DoReset();
-	virtual void Reset();
 	virtual ~BaseGoapAction();
 	
 	virtual bool checkProceduralPreconditions(Elite::Blackboard* pBlackboard);
-	virtual bool RequiresInRange();
 	virtual bool Execute(Elite::Blackboard* pBlackboard) { return true; }
-	virtual bool isDone();
 
 	virtual void SetPrecondition(const std::string& key, const bool value) { m_Preconditions[key] = value; }
 	virtual void SetEffect(const std::string& key, const bool value) { m_Effects[key] = value; }
 
-	void SetInRange(bool inRange) { this->m_InRange = inRange; }
+	virtual bool ConditionsMetByWorld(const WorldState& worldState);
+	virtual WorldState ApplyActionOnWorld(const WorldState& worldState) const;
+
+	float GetCost() const { return m_Cost; };
 protected:
 	float m_Cost{};
-	bool m_InRange = false;
 	std::string m_Name;
 	Elite::Vector2 m_Target{};
 	AgentInfo m_AgentInfo;
 	IExamInterface* m_pInterface;
+	WorldState* m_pWorldState;
 
 	std::unordered_map<std::string, bool> m_Preconditions;
 	std::unordered_map<std::string, bool> m_Effects;

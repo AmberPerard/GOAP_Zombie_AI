@@ -8,6 +8,7 @@
     <ClCompile Include="GoapActions.cpp" />
     <ClCompile Include="WorldState.cpp" />
     <ClCompile Include="GoapAstart.cpp" />
+    <ClCompile Include="Node.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Plugin.h" />
@@ -19,5 +20,6 @@
     <ClInclude Include="GoapActions.h" />
     <ClInclude Include="WorldState.h" />
     <ClInclude Include="GoapAstart.h" />
+    <ClInclude Include="Node.h" />
   </ItemGroup>
 </Project>

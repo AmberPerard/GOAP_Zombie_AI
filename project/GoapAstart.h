@@ -1,23 +1,24 @@
 #pragma once
 #include "BaseGoapAction.h"
+#include "Node.h"
 #include "WorldState.h"
-
-struct GoapNode final
-{
-	WorldState worldState;
-	BaseGoapAction* previousAction;
-	int costSoFar;
-	int estimatedTotalCost;
-
-};
 
 class GoapAstart final
 {
 public:
 	GoapAstart() = default;
 	std::vector<BaseGoapAction*> FindCurrentActions(const WorldState startState, const WorldState desiredState, std::vector<BaseGoapAction*> availableActions);
-
 private:
+
+	bool IsMemberOfClosedList(const WorldState& worldState) const;
+	std::vector<GoapNode>::iterator IsMemberOfOpenList(const WorldState& worldState);
+
+	void AddToOpenList(GoapNode&& n);
+	GoapNode& PopAndClose();
+
 	int GetHeuristicCost(const WorldState* startState, const WorldState* desiredState);
+
+	std::vector<GoapNode> m_OpenList{};
+	std::vector<GoapNode> m_ClosedList{};
 };
 
