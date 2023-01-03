@@ -2,7 +2,7 @@
 #include "GoapAstart.h"
 
 
-std::vector<BaseGoapAction*> GoapAstart::FindCurrentActions(const WorldState startState,
+std::vector<BaseGoapAction*> GoapAstar::FindCurrentActions(const WorldState startState,
 	const WorldState desiredState, std::vector<BaseGoapAction*> availableActions)
 {
 	// Feasible we'd re-use a planner, so clear out the prior results
@@ -75,23 +75,23 @@ std::vector<BaseGoapAction*> GoapAstart::FindCurrentActions(const WorldState sta
 	throw std::runtime_error("A* planner could not find a path from start to goal");
 }
 
-bool GoapAstart::IsMemberOfClosedList(const WorldState& worldState) const
+bool GoapAstar::IsMemberOfClosedList(const WorldState& worldState) const
 {
 	return std::find_if(begin(m_ClosedList), end(m_ClosedList), [&](const GoapNode& node) { return node.worldState == worldState; }) != end(m_ClosedList);
 }
-std::vector<GoapNode>::iterator GoapAstart::IsMemberOfOpenList(const WorldState& worldState)
+std::vector<GoapNode>::iterator GoapAstar::IsMemberOfOpenList(const WorldState& worldState)
 {
 	return std::find_if(begin(m_OpenList), end(m_OpenList), [&](const GoapNode& node) { return node.worldState == worldState; });
 }
 
-void GoapAstart::AddToOpenList(GoapNode&& n)
+void GoapAstar::AddToOpenList(GoapNode&& n)
 {
 	// insert maintaining sort order
 	auto it = std::lower_bound(begin(m_OpenList), end(m_OpenList), n);
 	m_OpenList.emplace(it, std::move(n));
 }
 
-int GoapAstart::GetHeuristicCost(const WorldState* startState, const WorldState* desiredState)
+int GoapAstar::GetHeuristicCost(const WorldState* startState, const WorldState* desiredState)
 {
 	int result{};
 
@@ -107,7 +107,7 @@ int GoapAstart::GetHeuristicCost(const WorldState* startState, const WorldState*
 	return result;
 }
 
-GoapNode& GoapAstart::PopAndClose()
+GoapNode& GoapAstar::PopAndClose()
 {
 	assert(!m_OpenList.empty());
 	m_ClosedList.push_back(std::move(m_OpenList.front()));

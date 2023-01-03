@@ -3,10 +3,10 @@
 #include "Node.h"
 #include "WorldState.h"
 
-class GoapAstart final
+class GoapAstar final
 {
 public:
-	GoapAstart() = default;
+	GoapAstar() = default;
 	std::vector<BaseGoapAction*> FindCurrentActions(const WorldState startState, const WorldState desiredState, std::vector<BaseGoapAction*> availableActions);
 private:
 

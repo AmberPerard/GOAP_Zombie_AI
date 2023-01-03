@@ -1,6 +1,9 @@
 #pragma once
+#include "BaseGoapAction.h"
 #include "IExamPlugin.h"
 #include "Exam_HelperStructs.h"
+#include "GoapAstart.h"
+#include "WorldState.h"
 #include "SteeringBehaviors/SteeringBehaviors.h"
 
 class IBaseInterface;
@@ -35,8 +38,34 @@ private:
 	bool m_RemoveItem = false; //Demo purpose
 	float m_AngSpeed = 0.f; //Demo purpose
 
-	Wander* m_pwander = {};
 	UINT m_InventorySlot = 0;
+	UINT m_ItemsInInventory = 0;
+
+	// Aquired entities
+	std::vector<HouseInfo>* m_pMemoryHouse;
+	std::vector<EntityInfo>* m_pMemoryEntities;
+	std::vector<EnemyInfo> m_EnemiesInFOV;
+	std::vector<ItemInfo>* m_pMemoryPistol;
+	std::vector<ItemInfo>* m_pMemoryShotGuns;
+	std::vector<ItemInfo>* m_pMemoryMedKits;
+	std::vector<ItemInfo>* m_pMemoryFood;
+	std::vector<ItemInfo>* m_pMemoryGarbage;
+
+	// In current FOV
+	std::vector<EntityInfo> m_EntitiesInFov;
+	std::vector<ItemInfo> m_ItemsInFov;
+	PurgeZoneInfo m_PurgeZoneInFov;
+
+	// GOAP
+	WorldState m_WorldState;
+	std::vector<BaseGoapAction*> m_pPlan;
+	std::vector<BaseGoapAction*> m_pActions;
+	std::vector<WorldState*> m_pGoals;
+	WorldState* m_CurrentGoal;
+	GoapAstar m_ASPlanner;
+
+	Elite::Blackboard* m_pBlackboard;
+	Elite::Blackboard* CreateBlackboard();
 };
 
 //ENTRY

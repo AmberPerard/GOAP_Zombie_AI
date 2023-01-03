@@ -18,7 +18,7 @@ void Plugin::Initialize(IBaseInterface* pInterface, PluginInfo& info)
 	info.Student_LastName = "Perard";
 	info.Student_Class = "2DAE08E";
 
-	m_pwander = new Wander();
+
 }
 
 //Called only once
@@ -133,7 +133,7 @@ SteeringPlugin_Output Plugin::UpdateSteering(float dt)
 	m_UseItem = false;
 	m_RemoveItem = false;
 
-	return m_pwander->CalculateSteering(agentInfo);
+	return steering;
 }
 
 //This function should only be used for rendering debug elements
