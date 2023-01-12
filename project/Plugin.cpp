@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Plugin.h"
 #include "IExamInterface.h"
+#include "GoapActions.h"
 
 using namespace std;
 
@@ -18,7 +19,18 @@ void Plugin::Initialize(IBaseInterface* pInterface, PluginInfo& info)
 	info.Student_LastName = "Perard";
 	info.Student_Class = "2DAE08E";
 
+	m_pMemoryHouse = new std::vector<HouseInfo>;
+	m_pMemoryEntities = new std::vector<EntityInfo>;
+	m_pMemoryPistol = new std::vector<ItemInfo>;
+	m_pMemoryShotGuns = new std::vector<ItemInfo>;
+	m_pMemoryMedKits = new std::vector<ItemInfo>;
+	m_pMemoryFood = new std::vector<ItemInfo>;
+	m_pMemoryGarbage = new std::vector<ItemInfo>;
 
+	CreateBlackboard();
+	InitializeWorldState();
+	AddActions();
+	AddGoals();
 }
 
 //Called only once
@@ -120,20 +132,65 @@ void Plugin::Update(float dt)
 //This function calculates the new SteeringOutput, called once per frame
 SteeringPlugin_Output Plugin::UpdateSteering(float dt)
 {
-	auto steering = SteeringPlugin_Output();
-	
+	GetEntitiesInFOV();
+
 	//Use the Interface (IAssignmentInterface) to 'interface' with the AI_Framework
 	auto agentInfo = m_pInterface->Agent_GetInfo();
+	m_pBlackboard->ChangeData("Target", m_Target);
+	m_pBlackboard->ChangeData("AgentInfo", agentInfo);
 
+	m_WorldState.SetCondition("lowHealth", agentInfo.Health <= 4.f);
+	m_WorldState.SetCondition("lowFood", agentInfo.Energy <= 4.f);
+	m_WorldState.SetCondition("inDanger", agentInfo.WasBitten || m_WorldState.getCondition("inDanger"));
 
 	//Use the navmesh to calculate the next navmesh point
 	//auto nextTargetPos = m_pInterface->NavMesh_GetClosestPathPoint(checkpointLocation);
+	WorldState* newGoal{};
+	for (const auto goal : m_pGoals)
+	{
+		if ((newGoal == nullptr || goal->m_Priority > newGoal->m_Priority))
+		{
+			newGoal = goal;
+		}
+	}
+	if (m_CurrentGoal == nullptr || newGoal != m_CurrentGoal || empty(m_pPlan))
+	{
+		m_CurrentGoal = newGoal;
 
-	m_GrabItem = false; //Reset State
-	m_UseItem = false;
-	m_RemoveItem = false;
+		std::cout << "Finding a plan for: " << m_CurrentGoal->m_Name << std::endl;
+		try
+		{
+			m_pPlan = m_ASPlanner.FindCurrentActions(m_WorldState, *m_CurrentGoal, m_pActions);
+			if (!empty(m_pPlan))
+			{
+				std::cout << "Found a plan: ";
+				for (auto action : m_pPlan)
+				{
+					std::cout << action->GetName();
+				}
+				std::cout << std::endl;
+			}
+		}
+		catch (const std::exception& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+	}
+	else
+	{
+		if (!empty(m_pPlan))
+		{
+			// There are still actions in the plan, execute the first action in line
+			BaseGoapAction* currentAction = m_pPlan.back();
+			if (currentAction->Execute(m_pBlackboard))
+			{
+				std::cout << "Finished execute action: " << currentAction->GetName() << std::endl;
+				m_pPlan.pop_back();
+			}
+		}
+	}
 
-	return steering;
+	return *m_pSteering;
 }
 
 //This function should only be used for rendering debug elements
@@ -162,21 +219,115 @@ vector<HouseInfo> Plugin::GetHousesInFOV() const
 	return vHousesInFOV;
 }
 
-vector<EntityInfo> Plugin::GetEntitiesInFOV() const
+void Plugin::GetEntitiesInFOV()
 {
-	vector<EntityInfo> vEntitiesInFOV = {};
 
-	EntityInfo ei = {};
+
+	EntityInfo entityInfo = {};
 	for (int i = 0;; ++i)
 	{
-		if (m_pInterface->Fov_GetEntityByIndex(i, ei))
+		if (m_pInterface->Fov_GetEntityByIndex(i, entityInfo))
 		{
-			vEntitiesInFOV.push_back(ei);
-			continue;
+
+			//// Check if we're not already aware of the entity
+			//if (std::find(m_pMemoryEntities->begin(), m_pMemoryEntities->end(), entityInfo) == m_pMemoryEntities->end())
+			//{
+			m_pMemoryEntities->push_back(entityInfo);
+
+			if (entityInfo.Type != eEntityType::ITEM) continue;
+
+			ItemInfo item{};
+			m_pInterface->Item_GetInfo(entityInfo, item);
+			switch (item.Type)
+			{
+			case eItemType::PISTOL:
+				m_pMemoryPistol->emplace_back(item);
+				m_WorldState.SetCondition("savedPistol", true);
+				break;
+			case eItemType::SHOTGUN:
+				m_pMemoryShotGuns->emplace_back(item);
+				m_WorldState.SetCondition("savedShotgun", true);
+				break;
+			case eItemType::MEDKIT:
+				m_pMemoryMedKits->emplace_back(item);
+				m_WorldState.SetCondition("savedMedkit", true);
+				break;
+			case eItemType::FOOD:
+				m_pMemoryFood->emplace_back(item);
+				m_WorldState.SetCondition("savedFood", true);
+				break;
+			case eItemType::GARBAGE:
+				m_pMemoryGarbage->emplace_back(item);
+				m_WorldState.SetCondition("savedGarbage", true);
+				break;
+			default:
+				continue;
+			}
 		}
 
 		break;
-	}
 
-	return vEntitiesInFOV;
+	}
+}
+
+void Plugin::CreateBlackboard()
+{
+	m_pBlackboard = new Elite::Blackboard();
+	m_pBlackboard->AddData("WorldState", &m_WorldState);
+	m_pBlackboard->AddData("AgentInfo", AgentInfo{});
+	m_pBlackboard->AddData("TargetItem", ItemInfo{});
+	m_pBlackboard->AddData("InventorySlot", 0U);
+	m_pBlackboard->AddData("Target", Elite::Vector2{});
+	m_pBlackboard->AddData("Steering", m_pSteering);
+	m_pBlackboard->AddData("Interface", m_pInterface);
+
+	// Entities
+	m_pBlackboard->AddData("Houses", m_pMemoryHouse);
+	m_pBlackboard->AddData("Pistols", m_pMemoryPistol);
+	m_pBlackboard->AddData("Shotguns", m_pMemoryShotGuns);
+	m_pBlackboard->AddData("Medkits", m_pMemoryMedKits);
+	m_pBlackboard->AddData("Food", m_pMemoryFood);
+	m_pBlackboard->AddData("Garbage", m_pMemoryGarbage);
+	m_pBlackboard->AddData("Enemies", std::vector<EnemyInfo>{});
+}
+
+void Plugin::InitializeWorldState()
+{
+	// Initial world state
+	m_WorldState.SetCondition("insidePurgezone", false);
+	m_WorldState.SetCondition("inDanger", false);
+	m_WorldState.SetCondition("LowHealth", false);
+	m_WorldState.SetCondition("LowFood", false);
+
+	m_WorldState.SetCondition("enemiesInRange", false);
+	m_WorldState.SetCondition("houseInRange", false);
+	m_WorldState.SetCondition("targetInRange", false);
+	m_WorldState.SetCondition("itemInRange", false);
+	m_WorldState.SetCondition("garbageInRange", false);
+
+	m_WorldState.SetCondition("savedPistol", false);
+	m_WorldState.SetCondition("savedShotgun", false);
+	m_WorldState.SetCondition("savedMedkit", false);
+	m_WorldState.SetCondition("savedFood", false);
+	m_WorldState.SetCondition("savedGarbage", false);
+	m_WorldState.SetCondition("destroyedGarbage", false);
+
+	m_WorldState.SetCondition("pistolInInv", false);
+	m_WorldState.SetCondition("foodInInv", false);
+	m_WorldState.SetCondition("shotgunInInv", false);
+	m_WorldState.SetCondition("medkitInInv", false);
+
+	m_WorldState.SetCondition("exploring", false);
+}
+
+void Plugin::AddActions()
+{
+	m_pActions.push_back(new GOAP::Action_Explore);
+	m_pActions.push_back(new GOAP::Action_MoveTo);
+}
+
+void Plugin::AddGoals()
+{
+	m_pGoals.push_back(new Goal_ExploreWorld);
+	m_pGoals.push_back(new Goal_LootHouse);
 }

@@ -12,7 +12,13 @@ bool WorldState::operator==(const WorldState& otherState) const
 	return this->m_Conditions == otherState.m_Conditions;
 }
 
-void WorldState::SetCodition(const std::string& conditionName, const bool value)
+bool WorldState::operator!=(const WorldState& otherState) const
+{
+    return this->m_Conditions != otherState.m_Conditions;
+}
+
+
+void WorldState::SetCondition(const std::string& conditionName, const bool value)
 {
     m_Conditions[conditionName] = value;
 }

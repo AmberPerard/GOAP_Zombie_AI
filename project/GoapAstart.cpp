@@ -2,22 +2,22 @@
 #include "GoapAstart.h"
 
 
-std::vector<BaseGoapAction*> GoapAstar::FindCurrentActions(const WorldState startState,
-	const WorldState desiredState, std::vector<BaseGoapAction*> availableActions)
+std::vector<BaseGoapAction*> GoapAstar::FindCurrentActions(const WorldState& startState,
+	const WorldState& desiredState, std::vector<BaseGoapAction*>& availableActions)
 {
 	// Feasible we'd re-use a planner, so clear out the prior results
 	m_OpenList.clear();
 	m_ClosedList.clear();
 
-	GoapNode currentRecord{startState,0,GetHeuristicCost(&startState, &desiredState),0,nullptr};
+	GoapNode currentRecord{startState,0,GetHeuristicCost(startState, desiredState),0,nullptr};
 	m_OpenList.push_back(std::move(currentRecord));
 
 	while (!m_OpenList.empty())
 	{
-		currentRecord = PopAndClose();
+		GoapNode& currentRecord(PopAndClose());
 
 		//check if current state is the goal state
-		if (currentRecord.worldState == desiredState)
+		if (currentRecord.worldState.MeetsGoal(desiredState))
 		{
 			std::vector<BaseGoapAction*> plan;
 			do
@@ -36,7 +36,7 @@ std::vector<BaseGoapAction*> GoapAstar::FindCurrentActions(const WorldState star
 
 			return plan;
 		}
-		for (const auto& action : availableActions)
+		for (const auto action : availableActions)
 		{
 
 			if (action->ConditionsMetByWorld(currentRecord.worldState))
@@ -47,8 +47,8 @@ std::vector<BaseGoapAction*> GoapAstar::FindCurrentActions(const WorldState star
 				{
 					continue;
 				}
-				const auto totalCostSoFar = currentRecord.costSoFar + action->GetCost();
-				const auto estimatedTotalCost = totalCostSoFar + GetHeuristicCost(&outcomeWorld, &desiredState);
+				const auto totalCostSoFar = currentRecord.costSoFar + int(action->GetCost());
+				const auto estimatedTotalCost = totalCostSoFar + GetHeuristicCost(outcomeWorld, desiredState);
 				auto outcomeNode = IsMemberOfOpenList(outcomeWorld);
 				if (outcomeNode == end(m_OpenList))
 				{
@@ -57,11 +57,11 @@ std::vector<BaseGoapAction*> GoapAstar::FindCurrentActions(const WorldState star
 				}
 				else
 				{
-					if (currentRecord.costSoFar + action->GetCost() < outcomeNode->costSoFar)
+					if (currentRecord.costSoFar + int(action->GetCost()) < outcomeNode->costSoFar)
 					{
 						outcomeNode->parentId = currentRecord.id;
-						outcomeNode->costSoFar = currentRecord.costSoFar + action->GetCost();
-						outcomeNode->estimatedTotalCost = GetHeuristicCost(&outcomeWorld, &desiredState);
+						outcomeNode->costSoFar = currentRecord.costSoFar + int(action->GetCost());
+						outcomeNode->estimatedTotalCost = GetHeuristicCost(outcomeWorld, desiredState);
 						outcomeNode->previousAction = action;
 
 						std::sort(begin(m_OpenList), end(m_OpenList));
@@ -91,14 +91,14 @@ void GoapAstar::AddToOpenList(GoapNode&& n)
 	m_OpenList.emplace(it, std::move(n));
 }
 
-int GoapAstar::GetHeuristicCost(const WorldState* startState, const WorldState* desiredState)
+int GoapAstar::GetHeuristicCost(const WorldState startState, const WorldState desiredState)
 {
 	int result{};
 
-	for (const auto& kv : desiredState->m_Conditions)
+	for (const auto& kv : desiredState.m_Conditions)
 	{
-		auto it = startState->m_Conditions.find(kv.first);
-		if (it == std::end(startState->m_Conditions) || it->second != kv.second)
+		auto it = startState.m_Conditions.find(kv.first);
+		if (it == std::end(startState.m_Conditions) || it->second != kv.second)
 		{
 			++result;
 		}

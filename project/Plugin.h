@@ -29,7 +29,7 @@ private:
 	//Interface, used to request data from/perform actions with the AI Framework
 	IExamInterface* m_pInterface = nullptr;
 	std::vector<HouseInfo> GetHousesInFOV() const;
-	std::vector<EntityInfo> GetEntitiesInFOV() const;
+	void GetEntitiesInFOV();
 
 	Elite::Vector2 m_Target = {};
 	bool m_CanRun = false; //Demo purpose
@@ -40,6 +40,10 @@ private:
 
 	UINT m_InventorySlot = 0;
 	UINT m_ItemsInInventory = 0;
+
+	//steering
+	SteeringPlugin_Output* m_pSteering;
+
 
 	// Aquired entities
 	std::vector<HouseInfo>* m_pMemoryHouse;
@@ -65,7 +69,12 @@ private:
 	GoapAstar m_ASPlanner;
 
 	Elite::Blackboard* m_pBlackboard;
-	Elite::Blackboard* CreateBlackboard();
+	void CreateBlackboard();
+	void InitializeWorldState();
+	void AddActions();
+	void AddGoals();
+
+	void updateHouses(float deltaTime);
 };
 
 //ENTRY

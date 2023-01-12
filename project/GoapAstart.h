@@ -16,7 +16,7 @@ private:
 	void AddToOpenList(GoapNode&& n);
 	GoapNode& PopAndClose();
 
-	int GetHeuristicCost(const WorldState* startState, const WorldState* desiredState);
+	int GetHeuristicCost(const WorldState startState, const WorldState desiredState);
 
 	std::vector<GoapNode> m_OpenList{};
 	std::vector<GoapNode> m_ClosedList{};

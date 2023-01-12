@@ -13,17 +13,6 @@ BaseGoapAction::~BaseGoapAction()
 
 bool BaseGoapAction::checkProceduralPreconditions(Elite::Blackboard* pBlackboard)
 {
-    for (const auto& preconditions : m_Preconditions)
-    {
-        try
-        {
-            //check world for precondition
-        }
-        catch (const std::out_of_range&)
-        {
-            return false;
-        }
-    }
     return true;
 }
 
@@ -44,7 +33,7 @@ WorldState BaseGoapAction::ApplyActionOnWorld(const WorldState& worldState) cons
     WorldState tmpWorldState{ worldState };
     for(const auto& effect: m_Effects)
     {
-        tmpWorldState.SetCodition(effect.first, effect.second);
+        tmpWorldState.SetCondition(effect.first, effect.second);
     }
     return tmpWorldState;
 }

@@ -12,10 +12,10 @@ struct SteeringPlugin_Output
 
 struct PluginInfo
 {
-	std::string BotName = "Alynxx";
-	std::string Student_FirstName = "Amber";
-	std::string Student_LastName = "Perard";
-	std::string Student_Class = "2DAE08E";
+	std::string BotName = "Minion";
+	std::string Student_FirstName = "Not Set";
+	std::string Student_LastName = "Not Set";
+	std::string Student_Class = "Not Set";
 };	
 
 struct GameDebugParams //Debuggin Purposes only (Ignored during release build)
@@ -37,12 +37,13 @@ struct GameDebugParams //Debuggin Purposes only (Ignored during release build)
 	bool RenderUI = false; //Render Player UI (Parameters)
 	bool AutoGrabClosestItem = false; //Auto Grab closest item (Item_Grab)
 	std::string LevelFile = "GameLevel.gppl"; //Level to load?
-	int Seed = 1234; //Seed for random generator
+	int Seed = -1; //Seed for random generator
 	int StartingDifficultyStage = 0; // Overwrites the difficulty stage
 	bool InfiniteStamina = false; // Agent has infinite stamina
 	bool SpawnDebugPistol = false; // Spawns pistol with 1000 ammo at start
-	bool SpawnDebugShotgun = false; // Spawns pistol with 1000 ammo at start
-	bool SpawnPurgeZonesOnMiddleClick = false; // Middle mouse clicks spawn purge zones
+	bool SpawnDebugShotgun = false; // Spawns shotgun with 1000 ammo at start
+	bool SpawnPurgeZonesOnMiddleClick = false; // Middle mouse clicks spawns purge zone
+	bool SpawnZombieOnRightClick = false; // Right mouse clicks spawns zombie
 	bool PrintDebugMessages = true;
 	bool ShowDebugItemNames = true;
 };

@@ -13,7 +13,7 @@ struct GoapNode final
 	int estimatedTotalCost;
 
 
-	GoapNode(const WorldState& worldstate, const int costSoFar, const int estimatedTotalCost, const int parentId,
+	GoapNode(WorldState worldstate, const int costSoFar, const int estimatedTotalCost, const int parentId,
 		BaseGoapAction* previousAction);
 };
 	bool operator<(const GoapNode& lhs, const GoapNode& rhs);

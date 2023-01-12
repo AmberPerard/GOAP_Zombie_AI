@@ -4,11 +4,11 @@
 
 namespace GOAP
 {
-	class Action_Wander final : public BaseGoapAction
+	class Action_Explore final : public BaseGoapAction
 	{
 	public:
-		Action_Wander();
-		~Action_Wander() override;
+		Action_Explore();
+		~Action_Explore() override;
 		bool checkProceduralPreconditions(Elite::Blackboard* pBlackboard) override;
 		bool Execute(Elite::Blackboard* pBlackboard) override;
 

@@ -12,7 +12,7 @@ public:
 	BaseGoapAction() = default;
 	BaseGoapAction(const std::string& name, const int cost);
 	virtual ~BaseGoapAction();
-	
+
 	virtual bool checkProceduralPreconditions(Elite::Blackboard* pBlackboard);
 	virtual bool Execute(Elite::Blackboard* pBlackboard) { return true; }
 
@@ -21,6 +21,8 @@ public:
 
 	virtual bool ConditionsMetByWorld(const WorldState& worldState);
 	virtual WorldState ApplyActionOnWorld(const WorldState& worldState) const;
+
+	std::string GetName() { return m_Name; };
 
 	float GetCost() const { return m_Cost; };
 protected:
@@ -33,6 +35,6 @@ protected:
 
 	std::unordered_map<std::string, bool> m_Preconditions;
 	std::unordered_map<std::string, bool> m_Effects;
-		
+
 };
 

@@ -16,10 +16,7 @@ public:
 	bool operator==(const WorldState& otherState) const;
 	bool operator!=(const WorldState& other) const;
 
-
-	friend std::ostream& operator<<(std::ostream& out, const WorldState& ws);
-
-	void SetCodition(const std::string& conditionName, const bool value);
+	void SetCondition(const std::string& conditionName, const bool value);
 	bool getCondition(const std::string& conditionName) const;
 
 	bool MeetsGoal(const WorldState& goal_state) const;
@@ -41,20 +38,20 @@ inline std::ostream& operator<<(std::ostream& out, const WorldState& ws)
 	return out;
 }
 
-struct Goal_Wander final : WorldState
+struct Goal_ExploreWorld final : WorldState
 {
 public:
-	Goal_Wander() : WorldState("Wander", 0)
+	Goal_ExploreWorld() : WorldState("ExploreWorld", 0)
 	{
-		SetCodition("wandering", true);
+		SetCondition("exploring", true);
 	}
 };
 
-struct Goal_EnterHouse final : WorldState
+struct Goal_LootHouse final : WorldState
 {
 public:
-	Goal_EnterHouse() : WorldState("Enter House", 100)
+	Goal_LootHouse() : WorldState("LootHouse", 100)
 	{
-		SetCodition("House_in_range", true);
+		SetCondition("houseInRange", true);
 	}
 };
