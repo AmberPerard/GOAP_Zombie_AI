@@ -1,70 +1,67 @@
-//Precompiled Header [ALWAYS ON TOP IN CPP]
 #include "stdafx.h"
-
-//Includes
 #include "SteeringBehaviors.h"
 
 using namespace Elite;
 
 //SEEK
 //****
-SteeringPlugin_Output Seek::CalculateSteering( AgentInfo pAgent)
+SteeringPlugin_Output* Seek::CalculateSteering( AgentInfo pAgent)
 {
-	SteeringPlugin_Output steering = {};
+	SteeringPlugin_Output* pSteering{new SteeringPlugin_Output()};
 
-	steering.LinearVelocity = m_Target.Position - pAgent.Position;
-	steering.LinearVelocity.Normalize();
-	steering.LinearVelocity *= pAgent.MaxLinearSpeed;
+	pSteering->LinearVelocity = m_Target.Position - pAgent.Position;
+	pSteering->LinearVelocity.Normalize();
+	pSteering->LinearVelocity *= pAgent.MaxLinearSpeed;
 
-	return steering;
+	return pSteering;
 }
 
-SteeringPlugin_Output Flee::CalculateSteering( AgentInfo pAgent)
+SteeringPlugin_Output* Flee::CalculateSteering( AgentInfo pAgent)
 {
-	SteeringPlugin_Output steering = {};
+	SteeringPlugin_Output* pSteering{ new SteeringPlugin_Output() };
 	const Vector2 toTarget = pAgent.Position - m_Target.Position;
 	const float distanceSquared = toTarget.MagnitudeSquared();
 
 
-	steering.LinearVelocity = pAgent.Position - m_Target.Position;
-	steering.LinearVelocity.Normalize();
-	steering.LinearVelocity *= pAgent.MaxLinearSpeed;
+	pSteering->LinearVelocity = pAgent.Position - m_Target.Position;
+	pSteering->LinearVelocity.Normalize();
+	pSteering->LinearVelocity *= pAgent.MaxLinearSpeed;
 
-	return steering;
+	return pSteering;
 }
 
-SteeringPlugin_Output Arrive::CalculateSteering( AgentInfo pAgent)
+SteeringPlugin_Output* Arrive::CalculateSteering( AgentInfo pAgent)
 {
-	SteeringPlugin_Output steering = {};
+	SteeringPlugin_Output* pSteering{ new SteeringPlugin_Output() };
 	const Vector2 toTarget = m_Target.Position - pAgent.Position;
 
-	steering.LinearVelocity = toTarget;
-	steering.LinearVelocity.Normalize();
+	pSteering->LinearVelocity = toTarget;
+	pSteering->LinearVelocity.Normalize();
 
 	const float distanceSquared = toTarget.MagnitudeSquared();
 	if (distanceSquared < m_SlowRadius * m_SlowRadius)
 	{
-		steering.LinearVelocity *= pAgent.MaxLinearSpeed * distanceSquared / (m_SlowRadius * m_SlowRadius);
+		pSteering->LinearVelocity *= pAgent.MaxLinearSpeed * distanceSquared / (m_SlowRadius * m_SlowRadius);
 	}
 	else
 	{
-		steering.LinearVelocity *= pAgent.MaxLinearSpeed;
+		pSteering->LinearVelocity *= pAgent.MaxLinearSpeed;
 	}
 
 	if (distanceSquared < m_TargetRadius * m_TargetRadius)
 	{
-		steering.LinearVelocity = Vector2{ 0,0 };
+		pSteering->LinearVelocity = Vector2{ 0,0 };
 	}
-	return steering;
+	return pSteering;
 
 }
 
-SteeringPlugin_Output Face::CalculateSteering( AgentInfo pAgent)
+SteeringPlugin_Output* Face::CalculateSteering( AgentInfo pAgent)
 {
 	// Disable this to avoid issues
 	//pAgent.SetAutoOrient(false);
 
-	SteeringPlugin_Output steering{};
+	SteeringPlugin_Output* pSteering{ new SteeringPlugin_Output() };
 
 	// Get the rotation of the target point based on unit circle.
 	const float targetRotation = atan2f(
@@ -87,24 +84,24 @@ SteeringPlugin_Output Face::CalculateSteering( AgentInfo pAgent)
 	// Stop rotating if within error margin
 	if (std::abs(pAgent.Orientation - targetRotation) < 0.2f)
 	{
-		steering.AngularVelocity = 0.f;
+		pSteering->AngularVelocity = 0.f;
 	}
 	else
 	{
 		// Steer correct side
-		steering.AngularVelocity = Clamp(direction, -1.f, 1.f) * pAgent.MaxLinearSpeed;
+		pSteering->AngularVelocity = Clamp(direction, -1.f, 1.f) * pAgent.MaxLinearSpeed;
 	}
 
-	return steering;
+	return pSteering;
 }
 
-SteeringPlugin_Output Wander::CalculateSteering( AgentInfo pAgent)
+SteeringPlugin_Output* Wander::CalculateSteering( AgentInfo pAgent)
 {
 	const Vector2 centerPointWanderCirlce{
 		 pAgent.Position+ (pAgent.LinearVelocity.GetNormalized() * m_OffsetDistance)
 	};
 
-	m_WanderAngle += Elite::ToRadians((rand() % m_MaxAngleChange) - (m_MaxAngleChange / 2));
+	m_WanderAngle += Elite::ToRadians((rand() % m_MaxAngleChange) - (float(m_MaxAngleChange) / 2.f));
 	Vector2 pointOnCircleRandom{ cosf(m_WanderAngle) * m_Radius,sinf(m_WanderAngle) * m_Radius };
 	pointOnCircleRandom += centerPointWanderCirlce;
 
@@ -127,20 +124,20 @@ void Wander::SetMaxAngleChange(float rad)
 	m_WanderAngle = rad;
 }
 
-SteeringPlugin_Output Pursuit::CalculateSteering( AgentInfo pAgent)
+SteeringPlugin_Output* Pursuit::CalculateSteering( AgentInfo pAgent)
 {
 	const Vector2 distanceBetween = m_Target.Position - pAgent.Position;
-	const int updatesAhead = distanceBetween.Magnitude() / pAgent.MaxLinearSpeed;
+	const float updatesAhead = distanceBetween.Magnitude() / pAgent.MaxLinearSpeed;
 	const Vector2 futurePosition = m_Target.Position + m_Target.LinearVelocity * updatesAhead;
 	m_Target = futurePosition;
 
 	return Seek::CalculateSteering( pAgent);
 }
 
-SteeringPlugin_Output Evade::CalculateSteering( AgentInfo pAgent)
+SteeringPlugin_Output* Evade::CalculateSteering( AgentInfo pAgent)
 {
 	const Vector2 distanceBetween = m_Target.Position - pAgent.Position;
-	const int updatesAhead = float(distanceBetween.Magnitude()) / (pAgent.MaxLinearSpeed * abs(m_Target.LinearVelocity.x));
+	const float updatesAhead = float(distanceBetween.Magnitude()) / (pAgent.MaxLinearSpeed * abs(m_Target.LinearVelocity.x));
 	const Vector2 futurePosition = m_Target.Position + m_Target.LinearVelocity * updatesAhead;
 	m_Target = futurePosition;
 

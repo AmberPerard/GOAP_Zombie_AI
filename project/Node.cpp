@@ -4,15 +4,17 @@
 int GoapNode::lastId = 0;
 
 GoapNode::GoapNode(const WorldState& worldstate, const int costSoFar, const int estimatedTotalCost, const int parentId, BaseGoapAction* previousAction)
-	:worldState(worldState),
-	costSoFar(costSoFar),
-	estimatedTotalCost(estimatedTotalCost),
-	parentId(parentId)
+	:m_WorldState{ m_WorldState },
+	m_CostSoFar(costSoFar),
+	m_EstimatedTotalCost(estimatedTotalCost),
+	m_ParentId(parentId)
 {
-	id = ++lastId;
+	m_Id = ++lastId;
+	m_WorldState = worldstate;
+	m_PreviousAction = previousAction;
 }
 
 bool operator<(const GoapNode& lhs, const GoapNode& rhs)
 {
-	return (lhs.costSoFar+lhs.estimatedTotalCost) < (rhs.costSoFar + rhs.estimatedTotalCost);
+	return (lhs.m_CostSoFar+lhs.m_EstimatedTotalCost) < (rhs.m_CostSoFar + rhs.m_EstimatedTotalCost);
 }

@@ -5,15 +5,16 @@
 struct GoapNode final
 {
 	static int lastId;
-	WorldState worldState;
-	BaseGoapAction* previousAction;
-	int id;
-	int parentId;
-	int costSoFar;
-	int estimatedTotalCost;
+
+	WorldState m_WorldState;
+	BaseGoapAction* m_PreviousAction;
+	int m_Id;
+	int m_ParentId;
+	int m_CostSoFar;
+	int m_EstimatedTotalCost;
 
 
-	GoapNode(WorldState worldstate, const int costSoFar, const int estimatedTotalCost, const int parentId,
+	GoapNode(const WorldState& worldstate, const int costSoFar, const int estimatedTotalCost, const int parentId,
 		BaseGoapAction* previousAction);
 };
 	bool operator<(const GoapNode& lhs, const GoapNode& rhs);

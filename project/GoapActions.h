@@ -11,6 +11,7 @@ namespace GOAP
 		~Action_Explore() override;
 		bool checkProceduralPreconditions(Elite::Blackboard* pBlackboard) override;
 		bool Execute(Elite::Blackboard* pBlackboard) override;
+		bool IsValid(Elite::Blackboard* pBlackboard) override;
 
 	private:
 		Wander* m_pWander = {};
@@ -24,9 +25,20 @@ namespace GOAP
 		~Action_MoveTo() override;
 		bool checkProceduralPreconditions(Elite::Blackboard* pBlackboard) override;
 		bool Execute(Elite::Blackboard* pBlackboard) override;
+		bool IsValid(Elite::Blackboard* pBlackboard) override;
 
 	private:
 		SteeringPlugin_Output* m_pSteering;
 		Seek* m_pSeek = {};
 	};
+
+	inline bool Action_MoveTo::IsValid(Elite::Blackboard* pBlackboard)
+	{
+		return BaseGoapAction::IsValid(pBlackboard)
+			&& pBlackboard->GetData("Target", m_Target)
+			&& pBlackboard->GetData("AgentInfo", m_AgentInfo)
+			&& pBlackboard->GetData("Steering", m_pSteering)
+			&& pBlackboard->GetData("Interface", m_pInterface)
+			&& pBlackboard->GetData("WorldState", m_pWorldState);
+	}
 }

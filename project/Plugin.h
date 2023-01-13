@@ -12,8 +12,8 @@ class IExamInterface;
 class Plugin :public IExamPlugin
 {
 public:
-	Plugin() {};
-	virtual ~Plugin() {};
+	Plugin() = default;
+	virtual ~Plugin() {}
 
 	void Initialize(IBaseInterface* pInterface, PluginInfo& info) override;
 	void DllInit() override;
@@ -42,39 +42,42 @@ private:
 	UINT m_ItemsInInventory = 0;
 
 	//steering
-	SteeringPlugin_Output* m_pSteering;
+	SteeringPlugin_Output* m_pSteering{};
 
 
 	// Aquired entities
-	std::vector<HouseInfo>* m_pMemoryHouse;
-	std::vector<EntityInfo>* m_pMemoryEntities;
-	std::vector<EnemyInfo> m_EnemiesInFOV;
-	std::vector<ItemInfo>* m_pMemoryPistol;
-	std::vector<ItemInfo>* m_pMemoryShotGuns;
-	std::vector<ItemInfo>* m_pMemoryMedKits;
-	std::vector<ItemInfo>* m_pMemoryFood;
-	std::vector<ItemInfo>* m_pMemoryGarbage;
+	std::vector<HouseInfo>* m_pMemoryHouse{};
+	std::vector<EntityInfo>* m_pMemoryEntities{};
+	std::vector<EnemyInfo> m_EnemiesInFOV{};
+	std::vector<ItemInfo>* m_pMemoryPistol{};
+	std::vector<ItemInfo>* m_pMemoryShotGuns{};
+	std::vector<ItemInfo>* m_pMemoryMedKits{};
+	std::vector<ItemInfo>* m_pMemoryFood{};
+	std::vector<ItemInfo>* m_pMemoryGarbage{};
 
 	// In current FOV
-	std::vector<EntityInfo> m_EntitiesInFov;
-	std::vector<ItemInfo> m_ItemsInFov;
-	PurgeZoneInfo m_PurgeZoneInFov;
+	std::vector<EntityInfo> m_EntitiesInFov{};
+	std::vector<ItemInfo> m_ItemsInFov{};
+	PurgeZoneInfo m_PurgeZoneInFov{};
 
 	// GOAP
-	WorldState m_WorldState;
-	std::vector<BaseGoapAction*> m_pPlan;
-	std::vector<BaseGoapAction*> m_pActions;
-	std::vector<WorldState*> m_pGoals;
-	WorldState* m_CurrentGoal;
-	GoapAstar m_ASPlanner;
+	WorldState m_WorldState{};
+	std::vector<BaseGoapAction*> m_pPlan{};
+	std::vector<BaseGoapAction*> m_pActions{};
+	std::vector<WorldState*> m_pGoals{};
+	WorldState* m_CurrentGoal{};
+	GoapAstar m_ASPlanner{};
 
-	Elite::Blackboard* m_pBlackboard;
+	Elite::Blackboard* m_pBlackboard{};
 	void CreateBlackboard();
 	void InitializeWorldState();
 	void AddActions();
 	void AddGoals();
 
-	void updateHouses(float deltaTime);
+	void UpdateHousesInformation(float deltaTime);
+	bool FindingPath(const WorldState& worldState, const WorldState& desiredState, std::vector<BaseGoapAction*>& actions);
+	bool ExecutingPlan();
+	WorldState* GetHighestPriorityGoal();
 };
 
 //ENTRY

@@ -22,6 +22,8 @@ public:
 	bool MeetsGoal(const WorldState& goal_state) const;
 	int DistanceTo(const WorldState& goal_state) const;
 
+	virtual bool IsValid(Elite::Blackboard* pBlackboard) const { return true; }
+
 	std::string m_Name; // Name of the state
 	int m_Priority; //Priority of the state
 	std::map<std::string, bool> m_Conditions; 
@@ -54,4 +56,5 @@ public:
 	{
 		SetCondition("houseInRange", true);
 	}
+	bool IsValid(Elite::Blackboard* pBlackboard) const override;
 };

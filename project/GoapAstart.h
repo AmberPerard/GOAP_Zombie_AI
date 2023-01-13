@@ -7,7 +7,7 @@ class GoapAstar final
 {
 public:
 	GoapAstar() = default;
-	std::vector<BaseGoapAction*> FindCurrentActions(const WorldState startState, const WorldState desiredState, std::vector<BaseGoapAction*> availableActions);
+	std::vector<BaseGoapAction*> FindCurrentPlan(const WorldState& startState, const WorldState& desiredState, std::vector<BaseGoapAction*>& availableActions);
 private:
 
 	bool IsMemberOfClosedList(const WorldState& worldState) const;

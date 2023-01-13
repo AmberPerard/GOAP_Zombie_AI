@@ -11,7 +11,7 @@ void Plugin::Initialize(IBaseInterface* pInterface, PluginInfo& info)
 	//Retrieving the interface
 	//This interface gives you access to certain actions the AI_Framework can perform for you
 	m_pInterface = static_cast<IExamInterface*>(pInterface);
-
+	m_pSteering = new SteeringPlugin_Output();
 	//Bit information about the plugin
 	//Please fill this in!!
 	info.BotName = "Alynxx";
@@ -133,8 +133,10 @@ void Plugin::Update(float dt)
 SteeringPlugin_Output Plugin::UpdateSteering(float dt)
 {
 	GetEntitiesInFOV();
+	//Get houses in FOV
+	//Get enemies in FOV
+	//check for PurgeZones
 
-	//Use the Interface (IAssignmentInterface) to 'interface' with the AI_Framework
 	auto agentInfo = m_pInterface->Agent_GetInfo();
 	m_pBlackboard->ChangeData("Target", m_Target);
 	m_pBlackboard->ChangeData("AgentInfo", agentInfo);
@@ -148,7 +150,7 @@ SteeringPlugin_Output Plugin::UpdateSteering(float dt)
 	WorldState* newGoal{};
 	for (const auto goal : m_pGoals)
 	{
-		if ((newGoal == nullptr || goal->m_Priority > newGoal->m_Priority))
+		if ((newGoal == nullptr || goal->m_Priority > newGoal->m_Priority) && goal->IsValid(m_pBlackboard))
 		{
 			newGoal = goal;
 		}
@@ -156,40 +158,10 @@ SteeringPlugin_Output Plugin::UpdateSteering(float dt)
 	if (m_CurrentGoal == nullptr || newGoal != m_CurrentGoal || empty(m_pPlan))
 	{
 		m_CurrentGoal = newGoal;
-
-		std::cout << "Finding a plan for: " << m_CurrentGoal->m_Name << std::endl;
-		try
-		{
-			m_pPlan = m_ASPlanner.FindCurrentActions(m_WorldState, *m_CurrentGoal, m_pActions);
-			if (!empty(m_pPlan))
-			{
-				std::cout << "Found a plan: ";
-				for (auto action : m_pPlan)
-				{
-					std::cout << action->GetName();
-				}
-				std::cout << std::endl;
-			}
-		}
-		catch (const std::exception& e)
-		{
-			std::cout << e.what() << std::endl;
-		}
+		FindingPath(m_WorldState, *m_CurrentGoal, m_pActions);
 	}
-	else
-	{
-		if (!empty(m_pPlan))
-		{
-			// There are still actions in the plan, execute the first action in line
-			BaseGoapAction* currentAction = m_pPlan.back();
-			if (currentAction->Execute(m_pBlackboard))
-			{
-				std::cout << "Finished execute action: " << currentAction->GetName() << std::endl;
-				m_pPlan.pop_back();
-			}
-		}
-	}
-
+	else ExecutingPlan();
+	//m_pBlackboard->GetData("pSteering", m_pSteering);
 	return *m_pSteering;
 }
 
@@ -230,43 +202,42 @@ void Plugin::GetEntitiesInFOV()
 		{
 
 			//// Check if we're not already aware of the entity
-			//if (std::find(m_pMemoryEntities->begin(), m_pMemoryEntities->end(), entityInfo) == m_pMemoryEntities->end())
-			//{
-			m_pMemoryEntities->push_back(entityInfo);
-
-			if (entityInfo.Type != eEntityType::ITEM) continue;
-
-			ItemInfo item{};
-			m_pInterface->Item_GetInfo(entityInfo, item);
-			switch (item.Type)
+			if (std::find(m_pMemoryEntities->begin(), m_pMemoryEntities->end(), entityInfo) == m_pMemoryEntities->end())
 			{
-			case eItemType::PISTOL:
-				m_pMemoryPistol->emplace_back(item);
-				m_WorldState.SetCondition("savedPistol", true);
-				break;
-			case eItemType::SHOTGUN:
-				m_pMemoryShotGuns->emplace_back(item);
-				m_WorldState.SetCondition("savedShotgun", true);
-				break;
-			case eItemType::MEDKIT:
-				m_pMemoryMedKits->emplace_back(item);
-				m_WorldState.SetCondition("savedMedkit", true);
-				break;
-			case eItemType::FOOD:
-				m_pMemoryFood->emplace_back(item);
-				m_WorldState.SetCondition("savedFood", true);
-				break;
-			case eItemType::GARBAGE:
-				m_pMemoryGarbage->emplace_back(item);
-				m_WorldState.SetCondition("savedGarbage", true);
-				break;
-			default:
-				continue;
+				m_pMemoryEntities->push_back(entityInfo);
+
+				if (entityInfo.Type != eEntityType::ITEM) continue;
+
+				ItemInfo item{};
+				m_pInterface->Item_GetInfo(entityInfo, item);
+				switch (item.Type)
+				{
+				case eItemType::PISTOL:
+					m_pMemoryPistol->emplace_back(item);
+					m_WorldState.SetCondition("savedPistol", true);
+					break;
+				case eItemType::SHOTGUN:
+					m_pMemoryShotGuns->emplace_back(item);
+					m_WorldState.SetCondition("savedShotgun", true);
+					break;
+				case eItemType::MEDKIT:
+					m_pMemoryMedKits->emplace_back(item);
+					m_WorldState.SetCondition("savedMedkit", true);
+					break;
+				case eItemType::FOOD:
+					m_pMemoryFood->emplace_back(item);
+					m_WorldState.SetCondition("savedFood", true);
+					break;
+				case eItemType::GARBAGE:
+					m_pMemoryGarbage->emplace_back(item);
+					m_WorldState.SetCondition("savedGarbage", true);
+					break;
+				default:
+					continue;
+				}
 			}
 		}
-
 		break;
-
 	}
 }
 
@@ -278,8 +249,8 @@ void Plugin::CreateBlackboard()
 	m_pBlackboard->AddData("TargetItem", ItemInfo{});
 	m_pBlackboard->AddData("InventorySlot", 0U);
 	m_pBlackboard->AddData("Target", Elite::Vector2{});
-	m_pBlackboard->AddData("Steering", m_pSteering);
-	m_pBlackboard->AddData("Interface", m_pInterface);
+	m_pBlackboard->AddData("pSteering",m_pSteering);
+	m_pBlackboard->AddData("pInterface", m_pInterface);
 
 	// Entities
 	m_pBlackboard->AddData("Houses", m_pMemoryHouse);
@@ -331,3 +302,63 @@ void Plugin::AddGoals()
 	m_pGoals.push_back(new Goal_ExploreWorld);
 	m_pGoals.push_back(new Goal_LootHouse);
 }
+
+bool Plugin::FindingPath(const WorldState& worldState, const WorldState& desiredState, std::vector<BaseGoapAction*>& actions)
+{
+	std::cout << "Finding plan for goal [" << desiredState.m_Name << "]\n";
+	try
+	{
+		m_pPlan = m_ASPlanner.FindCurrentPlan(worldState, desiredState, actions);
+		if (!empty(m_pPlan))
+		{
+			std::cout << "Found a plan: ";
+			for (auto action : m_pPlan)
+			{
+				std::cout << " << " << action->GetName();
+			}
+			std::cout << std::endl;
+			return true;
+		}
+		return false;
+	}
+	catch (const std::exception& e)
+	{
+		std::cout << e.what() << std::endl;
+		return false;
+	}
+}
+
+bool Plugin::ExecutingPlan()
+{
+	if (empty(m_pPlan)) return true;
+
+	// There are still actions in the plan, execute the first action in line
+	BaseGoapAction* currentAction = m_pPlan.back();
+	if (!currentAction->IsValid(m_pBlackboard))
+	{
+		m_CurrentGoal = GetHighestPriorityGoal();
+		FindingPath(m_WorldState,*m_CurrentGoal,m_pActions);
+		return true;
+	}
+	else if (currentAction->Execute(m_pBlackboard))
+	{
+		std::cout << "Finished excecuting " << currentAction->GetName() << std::endl;
+		m_pPlan.pop_back();
+		return empty(m_pPlan);
+	}
+	return false;
+}
+
+WorldState* Plugin::GetHighestPriorityGoal()
+{
+	WorldState* newGoal{};
+	for (const auto goal : m_pGoals)
+	{
+		if ((newGoal == nullptr || goal->m_Priority > newGoal->m_Priority) && goal->IsValid(m_pBlackboard))
+		{
+			newGoal = goal;
+		}
+	}
+	return newGoal;
+}
+

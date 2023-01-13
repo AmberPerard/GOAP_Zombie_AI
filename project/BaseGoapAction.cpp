@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "BaseGoapAction.h"
 
-BaseGoapAction::BaseGoapAction(const std::string& name, const int cost)
+BaseGoapAction::BaseGoapAction(const std::string& name, const float cost)
 	:m_Cost(cost),
 	m_Name(name)
 {
@@ -36,4 +36,9 @@ WorldState BaseGoapAction::ApplyActionOnWorld(const WorldState& worldState) cons
         tmpWorldState.SetCondition(effect.first, effect.second);
     }
     return tmpWorldState;
+}
+
+bool BaseGoapAction::IsValid(Elite::Blackboard* pBlackboard)
+{
+    return true;
 }

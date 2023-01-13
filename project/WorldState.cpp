@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "WorldState.h"
 
+#include <Exam_HelperStructs.h>
+#include <IExamInterface.h>
+
 WorldState::WorldState(const std::string& name, int priority)
 	:m_Name(name),
 	m_Priority(priority)
@@ -9,12 +12,12 @@ WorldState::WorldState(const std::string& name, int priority)
 
 bool WorldState::operator==(const WorldState& otherState) const
 {
-	return this->m_Conditions == otherState.m_Conditions;
+	return m_Conditions == otherState.m_Conditions;
 }
 
 bool WorldState::operator!=(const WorldState& otherState) const
 {
-    return this->m_Conditions != otherState.m_Conditions;
+    return !(m_Conditions == otherState.m_Conditions);
 }
 
 
@@ -62,4 +65,18 @@ int WorldState::DistanceTo(const WorldState& goal_state) const
     }
 
     return result;
+}
+
+bool Goal_LootHouse::IsValid(Elite::Blackboard* pBlackboard) const
+{
+    std::vector<HouseInfo>* houses;
+    if (!pBlackboard->GetData("Houses", houses) || houses->empty()) return false;
+
+    IExamInterface* pInterface;
+    if (!pBlackboard->GetData("Interface", pInterface) || pInterface == nullptr) return false;
+
+    AgentInfo agentInfo;
+    if (!pBlackboard->GetData("AgentInfo", agentInfo)) return false;
+
+    return true;
 }

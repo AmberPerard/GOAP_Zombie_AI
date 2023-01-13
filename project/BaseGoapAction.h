@@ -10,7 +10,7 @@ class BaseGoapAction
 {
 public:
 	BaseGoapAction() = default;
-	BaseGoapAction(const std::string& name, const int cost);
+	BaseGoapAction(const std::string& name, const float cost);
 	virtual ~BaseGoapAction();
 
 	virtual bool checkProceduralPreconditions(Elite::Blackboard* pBlackboard);
@@ -21,6 +21,7 @@ public:
 
 	virtual bool ConditionsMetByWorld(const WorldState& worldState);
 	virtual WorldState ApplyActionOnWorld(const WorldState& worldState) const;
+	virtual bool IsValid(Elite::Blackboard* pBlackboard);
 
 	std::string GetName() { return m_Name; };
 
