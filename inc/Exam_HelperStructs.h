@@ -111,6 +111,8 @@ struct HouseInfo
 {
 	Elite::Vector2 Center;
 	Elite::Vector2 Size;
+
+	bool operator==(const HouseInfo& other) const { return (Center == other.Center)&&(Size == other.Size); }
 };
 
 struct EnemyInfo

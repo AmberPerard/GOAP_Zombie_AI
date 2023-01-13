@@ -37,8 +37,8 @@ namespace GOAP
 		return BaseGoapAction::IsValid(pBlackboard)
 			&& pBlackboard->GetData("Target", m_Target)
 			&& pBlackboard->GetData("AgentInfo", m_AgentInfo)
-			&& pBlackboard->GetData("Steering", m_pSteering)
-			&& pBlackboard->GetData("Interface", m_pInterface)
+			&& pBlackboard->GetData("pSteering", m_pSteering)
+			&& pBlackboard->GetData("pInterface", m_pInterface)
 			&& pBlackboard->GetData("WorldState", m_pWorldState);
 	}
 }

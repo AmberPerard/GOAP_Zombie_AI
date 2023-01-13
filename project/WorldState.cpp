@@ -73,10 +73,21 @@ bool Goal_LootHouse::IsValid(Elite::Blackboard* pBlackboard) const
     if (!pBlackboard->GetData("Houses", houses) || houses->empty()) return false;
 
     IExamInterface* pInterface;
-    if (!pBlackboard->GetData("Interface", pInterface) || pInterface == nullptr) return false;
+    if (!pBlackboard->GetData("pInterface", pInterface) || pInterface == nullptr) return false;
 
     AgentInfo agentInfo;
     if (!pBlackboard->GetData("AgentInfo", agentInfo)) return false;
 
-    return true;
+    float closest{ INFINITY };
+    for (auto& house : *houses)
+    {
+        const float dist{ house.Center.DistanceSquared(agentInfo.Position) };
+        if (dist < closest)
+        {
+            closest = dist;
+            if (!pBlackboard->ChangeData("Target", house.Center)) return false;
+        }
+    }
+
+    return closest < INFINITY;
 }

@@ -54,7 +54,7 @@ struct Goal_LootHouse final : WorldState
 public:
 	Goal_LootHouse() : WorldState("LootHouse", 100)
 	{
-		SetCondition("houseInRange", true);
+		SetCondition("targetInRange", true);
 	}
 	bool IsValid(Elite::Blackboard* pBlackboard) const override;
 };

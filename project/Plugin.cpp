@@ -133,6 +133,7 @@ void Plugin::Update(float dt)
 SteeringPlugin_Output Plugin::UpdateSteering(float dt)
 {
 	GetEntitiesInFOV();
+	GetNewHousesInFOV(dt);
 	//Get houses in FOV
 	//Get enemies in FOV
 	//check for PurgeZones
@@ -161,7 +162,7 @@ SteeringPlugin_Output Plugin::UpdateSteering(float dt)
 		FindingPath(m_WorldState, *m_CurrentGoal, m_pActions);
 	}
 	else ExecutingPlan();
-	//m_pBlackboard->GetData("pSteering", m_pSteering);
+
 	return *m_pSteering;
 }
 
@@ -193,8 +194,6 @@ vector<HouseInfo> Plugin::GetHousesInFOV() const
 
 void Plugin::GetEntitiesInFOV()
 {
-
-
 	EntityInfo entityInfo = {};
 	for (int i = 0;; ++i)
 	{
@@ -301,6 +300,26 @@ void Plugin::AddGoals()
 {
 	m_pGoals.push_back(new Goal_ExploreWorld);
 	m_pGoals.push_back(new Goal_LootHouse);
+}
+
+void Plugin::GetNewHousesInFOV(float deltaTime)
+{
+	HouseInfo houseInfo = {};
+	for (int i = 0;; ++i)
+	{
+		if (m_pInterface->Fov_GetHouseByIndex(i, houseInfo))
+		{
+
+			//// Check if we're not already aware of the entity
+			if (std::find(m_pMemoryHouse->begin(), m_pMemoryHouse->end(), houseInfo) == m_pMemoryHouse->end())
+			{
+				m_pMemoryHouse->push_back(houseInfo);
+			}
+		}
+		break;
+	}
+
+	m_WorldState.SetCondition("houseInRange", !m_pMemoryHouse);
 }
 
 bool Plugin::FindingPath(const WorldState& worldState, const WorldState& desiredState, std::vector<BaseGoapAction*>& actions)

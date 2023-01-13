@@ -74,7 +74,7 @@ private:
 	void AddActions();
 	void AddGoals();
 
-	void UpdateHousesInformation(float deltaTime);
+	void GetNewHousesInFOV(float deltaTime);
 	bool FindingPath(const WorldState& worldState, const WorldState& desiredState, std::vector<BaseGoapAction*>& actions);
 	bool ExecutingPlan();
 	WorldState* GetHighestPriorityGoal();
