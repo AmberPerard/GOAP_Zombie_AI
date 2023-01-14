@@ -186,6 +186,7 @@
     <ClInclude Include="Data\EBlackboard.h" />
     <ClInclude Include="GoapActions.h" />
     <ClInclude Include="GoapAstart.h" />
+    <ClInclude Include="HelperStructExpension.h" />
     <ClInclude Include="Node.h" />
     <ClInclude Include="Plugin.h" />
     <ClInclude Include="stdafx.h" />

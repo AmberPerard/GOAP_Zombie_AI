@@ -19,13 +19,13 @@ void Plugin::Initialize(IBaseInterface* pInterface, PluginInfo& info)
 	info.Student_LastName = "Perard";
 	info.Student_Class = "2DAE08E";
 
-	m_pMemoryHouse = new std::vector<HouseInfo>;
-	m_pMemoryEntities = new std::vector<EntityInfo>;
+	m_pMemoryHouse = new std::vector<HouseInfoExtended>;
+	m_pMemoryEntities = new std::vector<EntityInfoExtended>;
 	m_pMemoryPistol = new std::vector<ItemInfo>;
 	m_pMemoryShotGuns = new std::vector<ItemInfo>;
 	m_pMemoryMedKits = new std::vector<ItemInfo>;
 	m_pMemoryFood = new std::vector<ItemInfo>;
-	m_pMemoryGarbage = new std::vector<EntityInfo>;
+	m_pMemoryGarbage = new std::vector<EntityInfoExtended>;
 
 	CreateBlackboard();
 	InitializeWorldState();
@@ -194,7 +194,7 @@ vector<HouseInfo> Plugin::GetHousesInFOV() const
 
 void Plugin::GetEntitiesInFOV()
 {
-	EntityInfo entityInfo = {};
+	EntityInfoExtended entityInfo = {};
 	for (int i = 0;; ++i)
 	{
 		if (m_pInterface->Fov_GetEntityByIndex(i, entityInfo))
@@ -314,13 +314,12 @@ void Plugin::AddGoals()
 
 void Plugin::GetNewHousesInFOV(float deltaTime)
 {
-	HouseInfo houseInfo = {};
+	HouseInfoExtended houseInfo = {};
 	for (int i = 0;; ++i)
 	{
 		if (m_pInterface->Fov_GetHouseByIndex(i, houseInfo))
 		{
-			std::cout << houseInfo.Size.x << " " << houseInfo.Size.y << std::endl;
-			//// Check if we're not already aware of the entity
+			//// Check if we're not already aware of that house
 			if (std::find(m_pMemoryHouse->begin(), m_pMemoryHouse->end(), houseInfo) == m_pMemoryHouse->end())
 			{
 				m_pMemoryHouse->push_back(houseInfo);

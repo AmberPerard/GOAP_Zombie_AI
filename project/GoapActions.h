@@ -86,7 +86,7 @@ namespace GOAP
 		Seek* m_pSeek = {};
 	};
 	///////////////////////////////////////
-	//GRAB PISTOL
+	//GRAB SHOTGUN
 	//****
 	class Action_GrabShotGun final : public BaseGoapAction
 	{

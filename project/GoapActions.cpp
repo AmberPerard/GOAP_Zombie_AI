@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "GoapActions.h"
 
+///////////////////////////////////////
+//EXPLORE
+//****
 GOAP::Action_Explore::Action_Explore()
 	: BaseGoapAction("exploring", 5)
 	, m_pSteering(new SteeringPlugin_Output())
@@ -32,7 +35,9 @@ bool GOAP::Action_Explore::Execute(Elite::Blackboard* pBlackboard)
 	m_pSteering->RunMode = false;
 	return false;
 }
-
+///////////////////////////////////////
+//MOVETO
+//****
 GOAP::Action_MoveTo::Action_MoveTo()
 	: BaseGoapAction("MoveTo", 5)
 	, m_pSteering(new SteeringPlugin_Output())
@@ -70,7 +75,9 @@ bool GOAP::Action_MoveTo::Execute(Elite::Blackboard* pBlackboard)
 	*m_pSteering = *m_pSeek->CalculateSteering(m_AgentInfo);
 	return false;
 }
-
+///////////////////////////////////////
+//GRAB FOOD
+//****
 GOAP::Action_GrabFood::Action_GrabFood()
 	:BaseGoapAction("GrabFood", 5)
 	, m_pSteering(new SteeringPlugin_Output())
@@ -112,7 +119,9 @@ bool GOAP::Action_GrabFood::Execute(Elite::Blackboard* pBlackboard)
 
 	return false;
 }
-
+///////////////////////////////////////
+//GRAB MEDKIT
+//****
 GOAP::Action_GrabMedkit::Action_GrabMedkit()
 	:BaseGoapAction("GrabMedKit", 5)
 	, m_pSteering(new SteeringPlugin_Output())
@@ -153,7 +162,9 @@ bool GOAP::Action_GrabMedkit::Execute(Elite::Blackboard* pBlackboard)
 
 	return false;
 }
-
+///////////////////////////////////////
+//GRAB PISTOL
+//****
 GOAP::Action_GrabPistol::Action_GrabPistol()
 	:BaseGoapAction("GrabPistol", 5)
 	, m_pSteering(new SteeringPlugin_Output())
@@ -194,7 +205,9 @@ bool GOAP::Action_GrabPistol::Execute(Elite::Blackboard* pBlackboard)
 
 	return false;
 }
-
+///////////////////////////////////////
+//GRAB SHOTGUN
+//****
 GOAP::Action_GrabShotGun::Action_GrabShotGun()
 	:BaseGoapAction("GrabShotGun", 5)
 	, m_pSteering(new SteeringPlugin_Output())
@@ -235,7 +248,9 @@ bool GOAP::Action_GrabShotGun::Execute(Elite::Blackboard* pBlackboard)
 
 	return false;
 }
-
+///////////////////////////////////////
+//DESTROY GARBAGE
+//****
 GOAP::Action_DestroyGarbage::Action_DestroyGarbage()
 	:BaseGoapAction("destroyGarbage", 5)
 	, m_pSteering(new SteeringPlugin_Output())

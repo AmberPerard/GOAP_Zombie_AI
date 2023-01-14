@@ -3,6 +3,7 @@
 #include "IExamPlugin.h"
 #include "Exam_HelperStructs.h"
 #include "GoapAstart.h"
+#include "HelperStructExpension.h"
 #include "WorldState.h"
 
 class IBaseInterface;
@@ -45,17 +46,17 @@ private:
 
 
 	// Aquired entities
-	std::vector<HouseInfo>* m_pMemoryHouse{};
-	std::vector<EntityInfo>* m_pMemoryEntities{};
+	std::vector<HouseInfoExtended>* m_pMemoryHouse{};
+	std::vector<EntityInfoExtended>* m_pMemoryEntities{};
 	std::vector<EnemyInfo> m_EnemiesInFOV{};
 	std::vector<ItemInfo>* m_pMemoryPistol{};
 	std::vector<ItemInfo>* m_pMemoryShotGuns{};
 	std::vector<ItemInfo>* m_pMemoryMedKits{};
 	std::vector<ItemInfo>* m_pMemoryFood{};
-	std::vector<EntityInfo>* m_pMemoryGarbage{};
+	std::vector<EntityInfoExtended>* m_pMemoryGarbage{};
 
 	// In current FOV
-	std::vector<EntityInfo> m_EntitiesInFov{};
+	std::vector<EntityInfoExtended> m_EntitiesInFov{};
 	std::vector<ItemInfo> m_ItemsInFov{};
 	PurgeZoneInfo m_PurgeZoneInFov{};
 

@@ -4,6 +4,8 @@
 #include <Exam_HelperStructs.h>
 #include <IExamInterface.h>
 
+#include "HelperStructExpension.h"
+
 WorldState::WorldState(const std::string& name, int priority)
 	:m_Name(name),
 	m_Priority(priority)
@@ -69,7 +71,7 @@ int WorldState::DistanceTo(const WorldState& goal_state) const
 
 bool Goal_LootHouse::IsValid(Elite::Blackboard* pBlackboard) const
 {
-    std::vector<HouseInfo>* houses;
+    std::vector<HouseInfoExtended>* houses;
     if (!pBlackboard->GetData("Houses", houses) || houses->empty()) return false;
 
     IExamInterface* pInterface;
@@ -181,7 +183,7 @@ bool Goal_DestroyGarbage::IsValid(Elite::Blackboard* pBlackboard) const
     WorldState* m_pWorldState;
     if (!pBlackboard->GetData("WorldState", m_pWorldState)) return false;
 
-    std::vector<EntityInfo>* garbages;
+    std::vector<EntityInfoExtended>* garbages;
     if (!pBlackboard->GetData("Garbage", garbages) || garbages->empty() || garbages == nullptr) return false;
 
     IExamInterface* pInterface;
