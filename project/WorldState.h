@@ -123,3 +123,28 @@ public:
 	}
 	bool IsValid(Elite::Blackboard* pBlackboard) const override;
 };
+///////////////////////////////////////
+//GOAL: Heal
+//****
+struct Goal_Heal final : WorldState
+{
+public:
+	Goal_Heal() : WorldState("Heal", 350)
+	{
+		SetCondition("LowHealth", false);
+	}
+	bool IsValid(Elite::Blackboard* pBlackboard) const override;
+};
+
+///////////////////////////////////////
+//GOAL: EatFood
+//****
+struct Goal_EatFood final : WorldState
+{
+public:
+	Goal_EatFood() : WorldState("EatFood", 350)
+	{
+		SetCondition("LowFood", false);
+	}
+	bool IsValid(Elite::Blackboard* pBlackboard) const override;
+};

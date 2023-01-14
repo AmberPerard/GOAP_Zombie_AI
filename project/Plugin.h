@@ -49,15 +49,15 @@ private:
 	std::vector<HouseInfoExtended>* m_pMemoryHouse{};
 	std::vector<EntityInfoExtended>* m_pMemoryEntities{};
 	std::vector<EnemyInfo> m_EnemiesInFOV{};
-	std::vector<ItemInfo>* m_pMemoryPistol{};
-	std::vector<ItemInfo>* m_pMemoryShotGuns{};
-	std::vector<ItemInfo>* m_pMemoryMedKits{};
-	std::vector<ItemInfo>* m_pMemoryFood{};
+	std::vector<EntityInfoExtended>* m_pMemoryPistol{};
+	std::vector<EntityInfoExtended>* m_pMemoryShotGuns{};
+	std::vector<EntityInfoExtended>* m_pMemoryMedKits{};
+	std::vector<EntityInfoExtended>* m_pMemoryFood{};
 	std::vector<EntityInfoExtended>* m_pMemoryGarbage{};
 
 	// In current FOV
 	std::vector<EntityInfoExtended> m_EntitiesInFov{};
-	std::vector<ItemInfo> m_ItemsInFov{};
+	std::vector<ItemInfoExtended> m_ItemsInFov{};
 	PurgeZoneInfo m_PurgeZoneInFov{};
 
 	// GOAP

@@ -1,5 +1,6 @@
 #pragma once
 #include "BaseGoapAction.h"
+#include "HelperStructExpension.h"
 #include "SteeringBehaviors/SteeringBehaviors.h"
 
 namespace GOAP
@@ -16,23 +17,25 @@ namespace GOAP
 		bool Execute(Elite::Blackboard* pBlackboard) override;
 
 	private:
-		Wander* m_pWander = {};
+		Seek* m_pSeek = {};
 		SteeringPlugin_Output* m_pSteering;
+		Elite::Vector2 m_OldWanderPost{};
 	};
 	///////////////////////////////////////
-	//MOVETO
+	//LootHouse
 	//****
-	class Action_MoveTo final : public BaseGoapAction
+	class Action_LootHouse final : public BaseGoapAction
 	{
 	public:
-		Action_MoveTo();
-		~Action_MoveTo() override;
+		Action_LootHouse();
+		~Action_LootHouse() override;
 		bool checkProceduralPreconditions(Elite::Blackboard* pBlackboard) override;
 		bool Execute(Elite::Blackboard* pBlackboard) override;
 
 	private:
 		SteeringPlugin_Output* m_pSteering;
 		Seek* m_pSeek = {};
+		HouseInfoExtended* m_TargetHouse;
 	};
 	///////////////////////////////////////
 	//GRAB FOOD
@@ -46,8 +49,8 @@ namespace GOAP
 		bool Execute(Elite::Blackboard* pBlackboard) override;
 
 	private:
-		ItemInfo m_TargetItem;
-		std::vector<ItemInfo>* m_pFood{};
+		EntityInfoExtended m_TargetItem;
+		std::vector<EntityInfoExtended>* m_pFood{};
 		SteeringPlugin_Output* m_pSteering;
 		Seek* m_pSeek = {};
 	};
@@ -63,8 +66,8 @@ namespace GOAP
 		bool Execute(Elite::Blackboard* pBlackboard) override;
 
 	private:
-		ItemInfo m_TargetItem;
-		std::vector<ItemInfo>* m_pMedkits{};
+		EntityInfoExtended m_TargetItem;
+		std::vector<EntityInfoExtended>* m_pMedkits{};
 		SteeringPlugin_Output* m_pSteering;
 		Seek* m_pSeek = {};
 	};
@@ -80,8 +83,8 @@ namespace GOAP
 		bool Execute(Elite::Blackboard* pBlackboard) override;
 
 	private:
-		ItemInfo m_TargetItem;
-		std::vector<ItemInfo>* m_pPistol{};
+		EntityInfoExtended m_TargetItem;
+		std::vector<EntityInfoExtended>* m_pPistol{};
 		SteeringPlugin_Output* m_pSteering;
 		Seek* m_pSeek = {};
 	};
@@ -97,8 +100,8 @@ namespace GOAP
 		bool Execute(Elite::Blackboard* pBlackboard) override;
 
 	private:
-		ItemInfo m_TargetItem;
-		std::vector<ItemInfo>* m_pShotgun{};
+		EntityInfoExtended m_TargetItem;
+		std::vector<EntityInfoExtended>* m_pShotgun{};
 		SteeringPlugin_Output* m_pSteering;
 		Seek* m_pSeek = {};
 	};
@@ -114,9 +117,30 @@ namespace GOAP
 		bool Execute(Elite::Blackboard* pBlackboard) override;
 
 	private:
-		ItemInfo m_TargetItem;
-		std::vector<EntityInfo>* m_pGarbage{};
+		std::vector<EntityInfoExtended>* m_pGarbage{};
 		SteeringPlugin_Output* m_pSteering;
 		Seek* m_pSeek = {};
+	};
+	///////////////////////////////////////
+	//CONSUME MEDKIT
+	//****
+	class Action_ConsumeMedKit final : public BaseGoapAction
+	{
+	public:
+		Action_ConsumeMedKit();
+		~Action_ConsumeMedKit() override = default;
+		bool checkProceduralPreconditions(Elite::Blackboard* pBlackboard) override;
+		bool Execute(Elite::Blackboard* pBlackboard) override;
+	};
+	///////////////////////////////////////
+	//CONSUME FOOD
+	//****
+	class Action_ConsumeFood final : public BaseGoapAction
+	{
+	public:
+		Action_ConsumeFood();
+		~Action_ConsumeFood() override = default;
+		bool checkProceduralPreconditions(Elite::Blackboard* pBlackboard) override;
+		bool Execute(Elite::Blackboard* pBlackboard) override;
 	};
 }

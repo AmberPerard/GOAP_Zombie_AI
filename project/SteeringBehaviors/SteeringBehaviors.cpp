@@ -15,6 +15,8 @@ SteeringPlugin_Output* Seek::CalculateSteering( AgentInfo pAgent)
 	pSteering->LinearVelocity = (m_pInterface->NavMesh_GetClosestPathPoint(m_Target.Position) - pAgent.Position).GetNormalized();
 	pSteering->LinearVelocity *= pAgent.MaxLinearSpeed;
 
+	m_pInterface->Draw_Point(m_pInterface->NavMesh_GetClosestPathPoint(m_Target.Position),2,{1,0,0});
+
 	return pSteering;
 }
 
@@ -102,6 +104,7 @@ SteeringPlugin_Output* Wander::CalculateSteering( AgentInfo pAgent)
 	pointOnCircleRandom += centerPointWanderCirlce;
 
 	m_Target = pointOnCircleRandom;
+
 	return Seek::CalculateSteering( pAgent);
 }
 

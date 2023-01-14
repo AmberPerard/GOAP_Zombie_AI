@@ -21,10 +21,10 @@ void Plugin::Initialize(IBaseInterface* pInterface, PluginInfo& info)
 
 	m_pMemoryHouse = new std::vector<HouseInfoExtended>;
 	m_pMemoryEntities = new std::vector<EntityInfoExtended>;
-	m_pMemoryPistol = new std::vector<ItemInfo>;
-	m_pMemoryShotGuns = new std::vector<ItemInfo>;
-	m_pMemoryMedKits = new std::vector<ItemInfo>;
-	m_pMemoryFood = new std::vector<ItemInfo>;
+	m_pMemoryPistol = new std::vector<EntityInfoExtended>;
+	m_pMemoryShotGuns = new std::vector<EntityInfoExtended>;
+	m_pMemoryMedKits = new std::vector<EntityInfoExtended>;
+	m_pMemoryFood = new std::vector<EntityInfoExtended>;
 	m_pMemoryGarbage = new std::vector<EntityInfoExtended>;
 
 	CreateBlackboard();
@@ -50,19 +50,19 @@ void Plugin::InitGameDebugParams(GameDebugParams& params)
 {
 	params.AutoFollowCam = true; //Automatically follow the AI? (Default = true)
 	params.RenderUI = true; //Render the IMGUI Panel? (Default = true)
-	params.SpawnEnemies = true; //Do you want to spawn enemies? (Default = true)
+	params.SpawnEnemies = false; //Do you want to spawn enemies? (Default = true)
 	params.EnemyCount = 20; //How many enemies? (Default = 20)
 	params.GodMode = false; //GodMode > You can't die, can be useful to inspect certain behaviors (Default = false)
 	params.LevelFile = "GameLevel.gppl";
-	params.AutoGrabClosestItem = true; //A call to Item_Grab(...) returns the closest item that can be grabbed. (EntityInfo argument is ignored)
+	params.AutoGrabClosestItem = false; //A call to Item_Grab(...) returns the closest item that can be grabbed. (EntityInfo argument is ignored)
 	params.StartingDifficultyStage = 1;
-	params.InfiniteStamina = false;
-	params.SpawnDebugPistol = true;
-	params.SpawnDebugShotgun = true;
+	params.InfiniteStamina = true;
+	params.SpawnDebugPistol = false;
+	params.SpawnDebugShotgun = false;
 	params.SpawnPurgeZonesOnMiddleClick = true;
 	params.PrintDebugMessages = true;
 	params.ShowDebugItemNames = true;
-	params.Seed = 34;
+	params.Seed = 30;
 }
 
 //Only Active in DEBUG Mode
@@ -132,6 +132,20 @@ void Plugin::Update(float dt)
 //This function calculates the new SteeringOutput, called once per frame
 SteeringPlugin_Output Plugin::UpdateSteering(float dt)
 {
+	auto sizeWorld = m_pInterface->World_GetInfo().Dimensions;
+	sizeWorld.y -= 200;
+	sizeWorld.x -= 200;
+	auto centerworld = m_pInterface->World_GetInfo().Center;
+	Elite::Vector2 topLeftCornerWorld{ centerworld.x - (sizeWorld.x / 2), centerworld.y + (sizeWorld.y / 2) };
+	Elite::Vector2 bottomLeftCornerWorld{ centerworld.x - (sizeWorld.x / 2), centerworld.y - (sizeWorld.y / 2) };
+	Elite::Vector2 topRightCornerWorld{ centerworld.x + (sizeWorld.x / 2), centerworld.y + (sizeWorld.y / 2) };
+	Elite::Vector2 bottomRightCornerWorld{ centerworld.x + (sizeWorld.x / 2), centerworld.y - (sizeWorld.y / 2) };
+
+	m_pInterface->Draw_Segment(topLeftCornerWorld, bottomLeftCornerWorld, { 0,0,1 });
+	m_pInterface->Draw_Segment(topLeftCornerWorld, topRightCornerWorld, { 0,0,1 });
+	m_pInterface->Draw_Segment(topRightCornerWorld, bottomRightCornerWorld, { 0,0,1 });
+	m_pInterface->Draw_Segment(bottomRightCornerWorld, bottomLeftCornerWorld, { 0,0,1 });
+
 	GetEntitiesInFOV();
 	//Get houses in FOV
 
@@ -145,7 +159,8 @@ SteeringPlugin_Output Plugin::UpdateSteering(float dt)
 			{
 				house.lastSinceTimeVisited = 0.f;
 				house.hasRecentlyBeenLooted = house.lastSinceTimeVisited < house.ReactivationTime;
-			}else
+			}
+			else
 			{
 				house.lastSinceTimeVisited += dt;
 				house.hasRecentlyBeenLooted = house.lastSinceTimeVisited < house.ReactivationTime;
@@ -154,8 +169,6 @@ SteeringPlugin_Output Plugin::UpdateSteering(float dt)
 	}
 
 	GetNewHousesInFOV(dt);
-
-
 	//Get enemies in FOV
 	//check for PurgeZones
 	m_pBlackboard->ChangeData("Target", m_Target);
@@ -212,6 +225,8 @@ void Plugin::GetEntitiesInFOV()
 		if (m_pInterface->Fov_GetEntityByIndex(i, entityInfo))
 		{
 
+			ItemInfo item{};
+			m_pInterface->Item_GetInfo(entityInfo, item);
 			//// Check if we're not already aware of the entity
 			if (std::find(m_pMemoryEntities->begin(), m_pMemoryEntities->end(), entityInfo) == m_pMemoryEntities->end())
 			{
@@ -219,27 +234,25 @@ void Plugin::GetEntitiesInFOV()
 
 				if (entityInfo.Type != eEntityType::ITEM) continue;
 
-				ItemInfo item{};
-				m_pInterface->Item_GetInfo(entityInfo, item);
 				switch (item.Type)
 				{
 				case eItemType::PISTOL:
-					m_pMemoryPistol->emplace_back(item);
+					m_pMemoryPistol->emplace_back(entityInfo);
 					m_WorldState.SetCondition("savedPistol", true);
 					SortEntitiesByDistance(m_pMemoryPistol);
 					break;
 				case eItemType::SHOTGUN:
-					m_pMemoryShotGuns->emplace_back(item);
+					m_pMemoryShotGuns->emplace_back(entityInfo);
 					m_WorldState.SetCondition("savedShotgun", true);
 					SortEntitiesByDistance(m_pMemoryShotGuns);
 					break;
 				case eItemType::MEDKIT:
-					m_pMemoryMedKits->emplace_back(item);
+					m_pMemoryMedKits->emplace_back(entityInfo);
 					m_WorldState.SetCondition("savedMedkit", true);
 					SortEntitiesByDistance(m_pMemoryMedKits);
 					break;
 				case eItemType::FOOD:
-					m_pMemoryFood->emplace_back(item);
+					m_pMemoryFood->emplace_back(entityInfo);
 					m_WorldState.SetCondition("savedFood", true);
 					SortEntitiesByDistance(m_pMemoryFood);
 					break;
@@ -252,6 +265,50 @@ void Plugin::GetEntitiesInFOV()
 					continue;
 				}
 			}
+			else
+			{
+				// We are already aware of the entity, update it's hash
+				switch (item.Type)
+				{
+				case eItemType::PISTOL:
+				{
+					auto& it = std::find(m_pMemoryPistol->begin(), m_pMemoryPistol->end(), entityInfo);
+					if (it != m_pMemoryPistol->end())
+						it->EntityHash = entityInfo.EntityHash;
+					break;
+				}
+				case eItemType::SHOTGUN:
+				{
+					auto& it = std::find(m_pMemoryShotGuns->begin(), m_pMemoryShotGuns->end(), entityInfo);
+					if (it != m_pMemoryShotGuns->end())
+						it->EntityHash = entityInfo.EntityHash;
+					break;
+				}
+				case eItemType::MEDKIT:
+				{
+					auto& it = std::find(m_pMemoryMedKits->begin(), m_pMemoryMedKits->end(), entityInfo);
+					if (it != m_pMemoryMedKits->end())
+						it->EntityHash = entityInfo.EntityHash;
+					break;
+				}
+				case eItemType::FOOD:
+				{
+					auto& it = std::find(m_pMemoryFood->begin(), m_pMemoryFood->end(), entityInfo);
+					if (it != m_pMemoryFood->end())
+						it->EntityHash = entityInfo.EntityHash;
+					break;
+				}
+				case eItemType::GARBAGE:
+				{
+					auto& it = std::find(m_pMemoryGarbage->begin(), m_pMemoryGarbage->end(), entityInfo);
+					if (it != m_pMemoryGarbage->end())
+						it->EntityHash = entityInfo.EntityHash;
+					break;
+				}
+
+
+				}
+			}
 		}
 		break;
 	}
@@ -262,7 +319,8 @@ void Plugin::CreateBlackboard()
 	m_pBlackboard = new Elite::Blackboard();
 	m_pBlackboard->AddData("WorldState", &m_WorldState);
 	m_pBlackboard->AddData("AgentInfo", AgentInfo{});
-	m_pBlackboard->AddData("TargetItem", ItemInfo{});
+	m_pBlackboard->AddData("TargetItem", EntityInfoExtended{});
+	m_pBlackboard->AddData("TargetHouse", &HouseInfoExtended{});
 	m_pBlackboard->AddData("InventorySlot", 0U);
 	m_pBlackboard->AddData("Target", Elite::Vector2{});
 	m_pBlackboard->AddData("pSteering", m_pSteering);
@@ -276,6 +334,7 @@ void Plugin::CreateBlackboard()
 	m_pBlackboard->AddData("Food", m_pMemoryFood);
 	m_pBlackboard->AddData("Garbage", m_pMemoryGarbage);
 	m_pBlackboard->AddData("Enemies", std::vector<EnemyInfo>{});
+
 }
 
 void Plugin::InitializeWorldState()
@@ -310,12 +369,14 @@ void Plugin::InitializeWorldState()
 void Plugin::AddActions()
 {
 	m_pActions.push_back(new GOAP::Action_Explore);
-	m_pActions.push_back(new GOAP::Action_MoveTo);
+	m_pActions.push_back(new GOAP::Action_LootHouse);
 	m_pActions.push_back(new GOAP::Action_GrabFood);
 	m_pActions.push_back(new GOAP::Action_GrabMedkit);
 	m_pActions.push_back(new GOAP::Action_GrabPistol);
 	m_pActions.push_back(new GOAP::Action_GrabShotGun);
 	m_pActions.push_back(new GOAP::Action_DestroyGarbage);
+	m_pActions.push_back(new GOAP::Action_ConsumeFood);
+	m_pActions.push_back(new GOAP::Action_ConsumeMedKit);
 }
 
 void Plugin::AddGoals()
@@ -327,6 +388,8 @@ void Plugin::AddGoals()
 	m_pGoals.push_back(new Goal_GrabPistol);
 	m_pGoals.push_back(new Goal_GrabShotgun);
 	m_pGoals.push_back(new Goal_DestroyGarbage);
+	m_pGoals.push_back(new Goal_EatFood);
+	m_pGoals.push_back(new Goal_Heal);
 }
 
 void Plugin::GetNewHousesInFOV(float deltaTime)
@@ -339,6 +402,12 @@ void Plugin::GetNewHousesInFOV(float deltaTime)
 			//// Check if we're not already aware of that house
 			if (std::find(m_pMemoryHouse->begin(), m_pMemoryHouse->end(), houseInfo) == m_pMemoryHouse->end())
 			{
+				m_pInterface->Draw_Point(houseInfo.Center, 2.0f, { 0,0,1 });
+				houseInfo.topPoint = Elite::Vector2{ houseInfo.Center.x , houseInfo.Center.y + (houseInfo.Size.y / 3) };
+				houseInfo.bottomPoint = Elite::Vector2{ houseInfo.Center.x , houseInfo.Center.y - (houseInfo.Size.y / 3) };
+				houseInfo.hasRecentlyBeenLooted = houseInfo.lastSinceTimeVisited < houseInfo.ReactivationTime;
+				houseInfo.Location = houseInfo.Center;
+
 				m_pMemoryHouse->push_back(houseInfo);
 			}
 		}

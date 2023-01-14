@@ -13,7 +13,6 @@ struct HouseInfoExtended final : HouseInfo
 	{
 	}
 
-
 	bool operator==(const HouseInfoExtended& rhs) const { return Center == rhs.Center; }
 	bool operator==(const HouseInfo& rhs) const { return Center == rhs.Center; }
 	bool operator==(HouseInfoExtended& rhs) const { return Center == rhs.Center; }
@@ -23,9 +22,12 @@ struct HouseInfoExtended final : HouseInfo
 	float ReactivationTime{ 200.f };
 	bool Looted {false};
 	bool hasRecentlyBeenLooted{ lastSinceTimeVisited < ReactivationTime };
-	Elite::Vector2 Location{ Center };
+	Elite::Vector2 Location = Center;
 
+	Elite::Vector2 topPoint  {};
+	Elite::Vector2 bottomPoint {};
 
+	bool visitedTop{ false };
 };
 
 struct EntityInfoExtended final : EntityInfo
@@ -40,4 +42,18 @@ struct EntityInfoExtended final : EntityInfo
 	bool operator==(const EntityInfo& other) const { return Location == other.Location; }
 	bool operator==(EntityInfoExtended& other) const { return Location == other.Location; }
 	bool operator==(EntityInfo& other) const { return Location == other.Location; }
+};
+
+struct ItemInfoExtended final : ItemInfo
+{
+	ItemInfoExtended() = default;
+	ItemInfoExtended(const ItemInfo& itemInfo)
+		:ItemInfo(itemInfo)
+	{
+	}
+
+	bool operator==(const ItemInfoExtended& other) const { return Location == other.Location; }
+	bool operator==(const ItemInfo& other) const { return Location == other.Location; }
+	bool operator==(ItemInfoExtended& other) const { return Location == other.Location; }
+	bool operator==(ItemInfo& other) const { return Location == other.Location; }
 };
