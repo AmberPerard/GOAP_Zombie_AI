@@ -124,8 +124,8 @@ public:
 
 protected:
 	float m_OffsetDistance = 6.f;
-	float m_Radius = 4.f;
-	int m_MaxAngleChange = 35;
+	float m_Radius = 2.f;
+	int m_MaxAngleChange = 45;
 	float m_WanderAngle = 0.f;
 };
 

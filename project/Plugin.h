@@ -78,6 +78,10 @@ private:
 	bool FindingPath(const WorldState& worldState, const WorldState& desiredState, std::vector<BaseGoapAction*>& actions);
 	bool ExecutingPlan();
 	WorldState* GetHighestPriorityGoal();
+
+	template<typename T>
+	void SortEntitiesByDistance(std::vector<T>* entities);
+
 };
 
 //ENTRY

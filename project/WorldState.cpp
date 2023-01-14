@@ -84,9 +84,10 @@ bool Goal_LootHouse::IsValid(Elite::Blackboard* pBlackboard) const
     for (auto& house : *houses)
     {
         const float dist{ house.Center.DistanceSquared(agentInfo.Position) };
-        if (dist < closest)
+        if (!house.hasRecentlyBeenLooted && dist < closest)
         {
             closest = dist;
+            house.Looted = true;
             if (!pBlackboard->ChangeData("Target", house.Center)) return false;
         }
     }

@@ -13,13 +13,17 @@ struct HouseInfoExtended final : HouseInfo
 	{
 	}
 
+
 	bool operator==(const HouseInfoExtended& rhs) const { return Center == rhs.Center; }
 	bool operator==(const HouseInfo& rhs) const { return Center == rhs.Center; }
 	bool operator==(HouseInfoExtended& rhs) const { return Center == rhs.Center; }
 	bool operator==(HouseInfo& rhs) const { return Center == rhs.Center; }
 
-	float lastSinceTimeVisited = 0.f;
-	bool Looted = false;
+	float lastSinceTimeVisited{ FLT_MAX };
+	float ReactivationTime{ 200.f };
+	bool Looted {false};
+	bool hasRecentlyBeenLooted{ lastSinceTimeVisited < ReactivationTime };
+	Elite::Vector2 Location{ Center };
 
 
 };

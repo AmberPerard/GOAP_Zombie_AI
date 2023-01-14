@@ -233,7 +233,7 @@ bool GOAP::Action_GrabShotGun::checkProceduralPreconditions(Elite::Blackboard* p
 		&& pBlackboard->GetData("pSteering", m_pSteering)
 		&& pBlackboard->GetData("AgentInfo", m_AgentInfo)
 		&& pBlackboard->GetData("WorldState", m_pWorldState)
-		&& pBlackboard->GetData("Shotgun", m_pShotgun);
+		&& pBlackboard->GetData("Shotguns", m_pShotgun);
 }
 
 bool GOAP::Action_GrabShotGun::Execute(Elite::Blackboard* pBlackboard)

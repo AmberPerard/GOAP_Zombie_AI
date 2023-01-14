@@ -133,12 +133,31 @@ void Plugin::Update(float dt)
 SteeringPlugin_Output Plugin::UpdateSteering(float dt)
 {
 	GetEntitiesInFOV();
-	GetNewHousesInFOV(dt);
 	//Get houses in FOV
-	//Get enemies in FOV
-	//check for PurgeZones
 
 	auto agentInfo = m_pInterface->Agent_GetInfo();
+
+	if (!m_pMemoryHouse->empty())
+	{
+		for (auto& house : *m_pMemoryHouse)
+		{
+			if (agentInfo.Position.Distance(house.Center) < 5.f)
+			{
+				house.lastSinceTimeVisited = 0.f;
+				house.hasRecentlyBeenLooted = house.lastSinceTimeVisited < house.ReactivationTime;
+			}else
+			{
+				house.lastSinceTimeVisited += dt;
+				house.hasRecentlyBeenLooted = house.lastSinceTimeVisited < house.ReactivationTime;
+			}
+		}
+	}
+
+	GetNewHousesInFOV(dt);
+
+
+	//Get enemies in FOV
+	//check for PurgeZones
 	m_pBlackboard->ChangeData("Target", m_Target);
 	m_pBlackboard->ChangeData("AgentInfo", agentInfo);
 
@@ -148,14 +167,7 @@ SteeringPlugin_Output Plugin::UpdateSteering(float dt)
 
 	//Use the navmesh to calculate the next navmesh point
 	//auto nextTargetPos = m_pInterface->NavMesh_GetClosestPathPoint(checkpointLocation);
-	WorldState* newGoal{};
-	for (const auto goal : m_pGoals)
-	{
-		if ((newGoal == nullptr || goal->m_Priority > newGoal->m_Priority) && goal->IsValid(m_pBlackboard))
-		{
-			newGoal = goal;
-		}
-	}
+	WorldState* newGoal = GetHighestPriorityGoal();
 	if (m_CurrentGoal == nullptr || newGoal != m_CurrentGoal || empty(m_pPlan))
 	{
 		m_CurrentGoal = newGoal;
@@ -214,22 +226,27 @@ void Plugin::GetEntitiesInFOV()
 				case eItemType::PISTOL:
 					m_pMemoryPistol->emplace_back(item);
 					m_WorldState.SetCondition("savedPistol", true);
+					SortEntitiesByDistance(m_pMemoryPistol);
 					break;
 				case eItemType::SHOTGUN:
 					m_pMemoryShotGuns->emplace_back(item);
 					m_WorldState.SetCondition("savedShotgun", true);
+					SortEntitiesByDistance(m_pMemoryShotGuns);
 					break;
 				case eItemType::MEDKIT:
 					m_pMemoryMedKits->emplace_back(item);
 					m_WorldState.SetCondition("savedMedkit", true);
+					SortEntitiesByDistance(m_pMemoryMedKits);
 					break;
 				case eItemType::FOOD:
 					m_pMemoryFood->emplace_back(item);
 					m_WorldState.SetCondition("savedFood", true);
+					SortEntitiesByDistance(m_pMemoryFood);
 					break;
 				case eItemType::GARBAGE:
 					m_pMemoryGarbage->emplace_back(entityInfo);
 					m_WorldState.SetCondition("savedGarbage", true);
+					SortEntitiesByDistance(m_pMemoryGarbage);
 					break;
 				default:
 					continue;
@@ -323,11 +340,12 @@ void Plugin::GetNewHousesInFOV(float deltaTime)
 			if (std::find(m_pMemoryHouse->begin(), m_pMemoryHouse->end(), houseInfo) == m_pMemoryHouse->end())
 			{
 				m_pMemoryHouse->push_back(houseInfo);
-
 			}
 		}
 		break;
 	}
+	if (!m_pMemoryHouse->empty())
+		SortEntitiesByDistance(m_pMemoryHouse);
 
 	m_WorldState.SetCondition("houseInRange", !m_pMemoryHouse);
 }
@@ -391,3 +409,18 @@ WorldState* Plugin::GetHighestPriorityGoal()
 	return newGoal;
 }
 
+template<typename T>
+void Plugin::SortEntitiesByDistance(std::vector<T>* entities)
+{
+	if (entities->empty()) return;
+
+	std::sort(entities->begin(), entities->end(), [&](const T& a, const T& b)
+		{
+			const Elite::Vector2 agentPos{ m_pInterface->Agent_GetInfo().Position };
+	const float distToA{ a.Location.DistanceSquared(agentPos) };
+	const float distToB{ b.Location.DistanceSquared(agentPos) };
+
+	return distToA > distToB;
+		}
+	);
+}
