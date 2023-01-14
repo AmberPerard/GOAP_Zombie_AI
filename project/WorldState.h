@@ -27,7 +27,7 @@ public:
 
 	std::string m_Name; // Name of the state
 	int m_Priority; //Priority of the state
-	std::map<std::string, bool> m_Conditions; 
+	std::map<std::string, bool> m_Conditions;
 };
 
 inline std::ostream& operator<<(std::ostream& out, const WorldState& ws)
@@ -142,9 +142,36 @@ public:
 struct Goal_EatFood final : WorldState
 {
 public:
-	Goal_EatFood() : WorldState("EatFood", 350)
+	Goal_EatFood() : WorldState("EatFood", 360)
 	{
 		SetCondition("LowFood", false);
+	}
+	bool IsValid(Elite::Blackboard* pBlackboard) const override;
+};
+
+///////////////////////////////////////
+//GOAL: FleePurgeZone
+//****
+struct Goal_FleePurgeZone final : WorldState
+{
+public:
+	Goal_FleePurgeZone() : WorldState("FleePurgeZone", 1050)
+	{
+		SetCondition("insidePurgezone", false);
+		SetCondition("inDanger", false);
+	}
+	bool IsValid(Elite::Blackboard* pBlackboard) const override;
+};
+
+///////////////////////////////////////
+//GOAL: ShootEnemies
+//****
+struct Goal_ShootEnemies final : WorldState
+{
+public:
+	Goal_ShootEnemies() : WorldState("ShootEnemies", 400)
+	{
+		SetCondition("inDanger", false);
 	}
 	bool IsValid(Elite::Blackboard* pBlackboard) const override;
 };

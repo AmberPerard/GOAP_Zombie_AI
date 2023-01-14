@@ -53,6 +53,7 @@ namespace GOAP
 		std::vector<EntityInfoExtended>* m_pFood{};
 		SteeringPlugin_Output* m_pSteering;
 		Seek* m_pSeek = {};
+		Face* m_pFace = {};
 	};
 	///////////////////////////////////////
 	//GRAB MEDKIT
@@ -70,6 +71,7 @@ namespace GOAP
 		std::vector<EntityInfoExtended>* m_pMedkits{};
 		SteeringPlugin_Output* m_pSteering;
 		Seek* m_pSeek = {};
+		Face* m_pFace = {};
 	};
 	///////////////////////////////////////
 	//GRAB PISTOL
@@ -87,6 +89,7 @@ namespace GOAP
 		std::vector<EntityInfoExtended>* m_pPistol{};
 		SteeringPlugin_Output* m_pSteering;
 		Seek* m_pSeek = {};
+		Face* m_pFace = {};
 	};
 	///////////////////////////////////////
 	//GRAB SHOTGUN
@@ -104,6 +107,7 @@ namespace GOAP
 		std::vector<EntityInfoExtended>* m_pShotgun{};
 		SteeringPlugin_Output* m_pSteering;
 		Seek* m_pSeek = {};
+		Face* m_pFace = {};
 	};
 	///////////////////////////////////////
 	//DESTROY GARBAGE
@@ -120,6 +124,7 @@ namespace GOAP
 		std::vector<EntityInfoExtended>* m_pGarbage{};
 		SteeringPlugin_Output* m_pSteering;
 		Seek* m_pSeek = {};
+		Face* m_pFace = {};
 	};
 	///////////////////////////////////////
 	//CONSUME MEDKIT
@@ -142,5 +147,51 @@ namespace GOAP
 		~Action_ConsumeFood() override = default;
 		bool checkProceduralPreconditions(Elite::Blackboard* pBlackboard) override;
 		bool Execute(Elite::Blackboard* pBlackboard) override;
+	};
+	///////////////////////////////////////
+//CONSUME FOOD
+//****
+	class Action_KillShotGun final : public BaseGoapAction
+	{
+	public:
+		Action_KillShotGun();
+		~Action_KillShotGun() override = default;
+		bool checkProceduralPreconditions(Elite::Blackboard* pBlackboard) override;
+		bool Execute(Elite::Blackboard* pBlackboard) override;
+	private:
+		SteeringPlugin_Output* m_pSteering;
+		std::vector<EnemyInfo> m_Enemies;
+		const float m_AngleError{ 1.f };
+		Face* m_pFace;
+	};
+	///////////////////////////////////////
+//CONSUME FOOD
+//****
+	class Action_KillPistol final : public BaseGoapAction
+	{
+	public:
+		Action_KillPistol();
+		~Action_KillPistol() override = default;
+		bool checkProceduralPreconditions(Elite::Blackboard* pBlackboard) override;
+		bool Execute(Elite::Blackboard* pBlackboard) override;
+	private:
+		SteeringPlugin_Output* m_pSteering;
+		std::vector<EnemyInfo> m_Enemies;
+		const float m_AngleError{ 1.f };
+		Face* m_pFace;
+	};
+	///////////////////////////////////////
+//CONSUME FOOD
+//****
+	class Action_FleePurgezone final : public BaseGoapAction
+	{
+	public:
+		Action_FleePurgezone();
+		~Action_FleePurgezone() override = default;
+		bool checkProceduralPreconditions(Elite::Blackboard* pBlackboard) override;
+		bool Execute(Elite::Blackboard* pBlackboard) override;
+	private:
+		SteeringPlugin_Output* m_pSteering;
+		Flee* m_pFlee;
 	};
 }

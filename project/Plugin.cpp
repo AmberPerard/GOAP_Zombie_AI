@@ -50,13 +50,13 @@ void Plugin::InitGameDebugParams(GameDebugParams& params)
 {
 	params.AutoFollowCam = true; //Automatically follow the AI? (Default = true)
 	params.RenderUI = true; //Render the IMGUI Panel? (Default = true)
-	params.SpawnEnemies = false; //Do you want to spawn enemies? (Default = true)
+	params.SpawnEnemies = true; //Do you want to spawn enemies? (Default = true)
 	params.EnemyCount = 20; //How many enemies? (Default = 20)
 	params.GodMode = false; //GodMode > You can't die, can be useful to inspect certain behaviors (Default = false)
 	params.LevelFile = "GameLevel.gppl";
 	params.AutoGrabClosestItem = false; //A call to Item_Grab(...) returns the closest item that can be grabbed. (EntityInfo argument is ignored)
 	params.StartingDifficultyStage = 1;
-	params.InfiniteStamina = true;
+	params.InfiniteStamina = false;
 	params.SpawnDebugPistol = false;
 	params.SpawnDebugShotgun = false;
 	params.SpawnPurgeZonesOnMiddleClick = true;
@@ -132,20 +132,6 @@ void Plugin::Update(float dt)
 //This function calculates the new SteeringOutput, called once per frame
 SteeringPlugin_Output Plugin::UpdateSteering(float dt)
 {
-	auto sizeWorld = m_pInterface->World_GetInfo().Dimensions;
-	sizeWorld.y -= 200;
-	sizeWorld.x -= 200;
-	auto centerworld = m_pInterface->World_GetInfo().Center;
-	Elite::Vector2 topLeftCornerWorld{ centerworld.x - (sizeWorld.x / 2), centerworld.y + (sizeWorld.y / 2) };
-	Elite::Vector2 bottomLeftCornerWorld{ centerworld.x - (sizeWorld.x / 2), centerworld.y - (sizeWorld.y / 2) };
-	Elite::Vector2 topRightCornerWorld{ centerworld.x + (sizeWorld.x / 2), centerworld.y + (sizeWorld.y / 2) };
-	Elite::Vector2 bottomRightCornerWorld{ centerworld.x + (sizeWorld.x / 2), centerworld.y - (sizeWorld.y / 2) };
-
-	m_pInterface->Draw_Segment(topLeftCornerWorld, bottomLeftCornerWorld, { 0,0,1 });
-	m_pInterface->Draw_Segment(topLeftCornerWorld, topRightCornerWorld, { 0,0,1 });
-	m_pInterface->Draw_Segment(topRightCornerWorld, bottomRightCornerWorld, { 0,0,1 });
-	m_pInterface->Draw_Segment(bottomRightCornerWorld, bottomLeftCornerWorld, { 0,0,1 });
-
 	GetEntitiesInFOV();
 	//Get houses in FOV
 
@@ -169,14 +155,21 @@ SteeringPlugin_Output Plugin::UpdateSteering(float dt)
 	}
 
 	GetNewHousesInFOV(dt);
-	//Get enemies in FOV
-	//check for PurgeZones
+	CheckIfInisdePurgeZone();
+	m_EnemiesInFOV = GetEnemiesInFOV();
+
 	m_pBlackboard->ChangeData("Target", m_Target);
 	m_pBlackboard->ChangeData("AgentInfo", agentInfo);
+	m_pBlackboard->ChangeData("Enemies", m_EnemiesInFOV);
 
-	m_WorldState.SetCondition("lowHealth", agentInfo.Health <= 4.f);
-	m_WorldState.SetCondition("lowFood", agentInfo.Energy <= 4.f);
-	m_WorldState.SetCondition("inDanger", agentInfo.WasBitten || m_WorldState.getCondition("inDanger"));
+	m_WorldState.SetCondition("LowHealth", agentInfo.Health <= 4.f);
+	m_WorldState.SetCondition("LowFood", agentInfo.Energy <= 4.f);
+	if(agentInfo.Energy <= 4.f)
+	{
+		std::cout << "low on energy" << std::endl;
+	}
+	m_WorldState.SetCondition("inDanger", agentInfo.WasBitten || m_WorldState.getCondition("inDanger")|| !m_EnemiesInFOV.empty());
+	m_WorldState.SetCondition("enemiesInRange", !m_EnemiesInFOV.empty());
 
 	//Use the navmesh to calculate the next navmesh point
 	//auto nextTargetPos = m_pInterface->NavMesh_GetClosestPathPoint(checkpointLocation);
@@ -314,6 +307,62 @@ void Plugin::GetEntitiesInFOV()
 	}
 }
 
+std::vector<EnemyInfo> Plugin::GetEnemiesInFOV()
+{
+	std::vector<EnemyInfo> enemiesInFOV;
+
+	EntityInfo ei;
+	for (int i = 0;; ++i)
+	{
+		if (m_pInterface->Fov_GetEntityByIndex(i, ei))
+		{
+			if (ei.Type == eEntityType::ENEMY)
+			{
+				EnemyInfo enemy;
+				m_pInterface->Enemy_GetInfo(ei, enemy);
+				enemiesInFOV.push_back(enemy);
+			}
+			continue;
+		}
+		break;
+	}
+
+	SortEntitiesByDistance(&enemiesInFOV);
+	return enemiesInFOV;
+}
+
+bool Plugin::CheckIfInisdePurgeZone()
+{
+	EntityInfo entityInfo{};
+	Elite::Vector2 combinedDirection{ Elite::ZeroVector2 };
+	for (int i = 0;; ++i)
+	{
+		if (m_pInterface->Fov_GetEntityByIndex(i, entityInfo))
+		{
+			if (entityInfo.Type == eEntityType::PURGEZONE)
+			{
+				m_pInterface->PurgeZone_GetInfo(entityInfo, m_PurgeZoneInFov);
+				Elite::Vector2 directionVector = m_pInterface->Agent_GetInfo().Position - m_PurgeZoneInFov.Center;
+				if (directionVector.MagnitudeSquared() <= m_PurgeZoneInFov.Radius * m_PurgeZoneInFov.Radius)
+				{
+					combinedDirection += directionVector;
+					m_WorldState.SetCondition("insidePurgezone", true);
+				}
+			}
+			continue;
+		}
+		break;
+	}
+
+	if (combinedDirection != Elite::ZeroVector2)
+	{
+		m_Target = m_PurgeZoneInFov.Center + combinedDirection.GetNormalized() * (m_PurgeZoneInFov.Radius * 1.5f);
+		std::cout << "Target at: " << m_Target << std::endl;
+		return true;
+	}
+	return false;
+}
+
 void Plugin::CreateBlackboard()
 {
 	m_pBlackboard = new Elite::Blackboard();
@@ -377,6 +426,9 @@ void Plugin::AddActions()
 	m_pActions.push_back(new GOAP::Action_DestroyGarbage);
 	m_pActions.push_back(new GOAP::Action_ConsumeFood);
 	m_pActions.push_back(new GOAP::Action_ConsumeMedKit);
+	m_pActions.push_back(new GOAP::Action_KillPistol);
+	m_pActions.push_back(new GOAP::Action_KillShotGun);
+	m_pActions.push_back(new GOAP::Action_FleePurgezone);
 }
 
 void Plugin::AddGoals()
@@ -390,6 +442,8 @@ void Plugin::AddGoals()
 	m_pGoals.push_back(new Goal_DestroyGarbage);
 	m_pGoals.push_back(new Goal_EatFood);
 	m_pGoals.push_back(new Goal_Heal);
+	m_pGoals.push_back(new Goal_FleePurgeZone);
+	m_pGoals.push_back(new Goal_ShootEnemies);
 }
 
 void Plugin::GetNewHousesInFOV(float deltaTime)

@@ -30,6 +30,8 @@ private:
 	IExamInterface* m_pInterface = nullptr;
 	std::vector<HouseInfo> GetHousesInFOV() const;
 	void GetEntitiesInFOV();
+	std::vector<EnemyInfo> GetEnemiesInFOV();
+	bool CheckIfInisdePurgeZone();
 
 	Elite::Vector2 m_Target = {};
 	bool m_CanRun = false; //Demo purpose

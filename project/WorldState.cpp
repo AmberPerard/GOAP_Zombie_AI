@@ -212,3 +212,20 @@ bool Goal_EatFood::IsValid(Elite::Blackboard* pBlackboard) const
 	return m_pWorldState->getCondition("LowFood") && m_pWorldState->getCondition("foodInInv");
 }
 
+bool Goal_FleePurgeZone::IsValid(Elite::Blackboard* pBlackboard) const
+{
+	WorldState* m_pWorldState;
+	if (!pBlackboard->GetData("WorldState", m_pWorldState)) return false;
+
+	return m_pWorldState->getCondition("insidePurgezone");
+
+}
+
+bool Goal_ShootEnemies::IsValid(Elite::Blackboard* pBlackboard) const
+{
+	WorldState* m_pWorldState;
+	if (!pBlackboard->GetData("WorldState", m_pWorldState)) return false;
+
+	return m_pWorldState->getCondition("inDanger");
+}
+
