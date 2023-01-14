@@ -1,5 +1,8 @@
 #include "stdafx.h"
 #include "SteeringBehaviors.h"
+#include "IExamPlugin.h"
+#include "Exam_HelperStructs.h"
+#include "../Data/EBlackboard.h"
 
 using namespace Elite;
 
@@ -58,9 +61,6 @@ SteeringPlugin_Output* Arrive::CalculateSteering( AgentInfo pAgent)
 
 SteeringPlugin_Output* Face::CalculateSteering( AgentInfo pAgent)
 {
-	// Disable this to avoid issues
-	//pAgent.SetAutoOrient(false);
-
 	SteeringPlugin_Output* pSteering{ new SteeringPlugin_Output() };
 
 	// Get the rotation of the target point based on unit circle.
@@ -142,4 +142,93 @@ SteeringPlugin_Output* Evade::CalculateSteering( AgentInfo pAgent)
 	m_Target = futurePosition;
 
 	return Flee::CalculateSteering( pAgent);
+}
+
+SteeringPlugin_Output* Hide::CalculateSteering(AgentInfo pAgent)
+{
+	///* Find the closest hiding spot. */
+	//float distToClostest = INFINITE;
+	//Vector2 bestHidingSpot{};
+
+	//for (Obstacle* obstacle : *pAgent->GetObstacles())
+	//{
+	//	float distAway = obstacle->GetRadius() + 5;
+
+	//	Vector2 dir = obstacle->GetCenter() - m_Target.Position;
+	//	dir.Normalize();
+
+	//	Vector2 hidingPos = obstacle->GetCenter() + dir * distAway;
+
+	//	float distance = Distance(hidingPos, pAgent->GetPosition());
+
+	//	if (distance < distToClostest)
+	//	{
+	//		distToClostest = distance;
+	//		bestHidingSpot = hidingPos;
+	//	}
+	//}
+	//m_Target = bestHidingSpot;
+	return  Seek::CalculateSteering( pAgent);
+}
+
+SteeringPlugin_Output* Interpose::CalculateSteering( AgentInfo pAgent)
+{
+	//auto midCalcu = m_SecondTarget.Position + m_Target.Position;
+	//auto middlePostion = Vector2{ midCalcu.x / 2,midCalcu.y / 2 };
+
+	//m_Target = middlePostion;
+	return Seek::CalculateSteering( pAgent);
+}
+
+SteeringPlugin_Output* AvoidObstacle::CalculateSteering(AgentInfo pAgent)
+{
+	//float maxahead = 2.f;
+	//HouseInfo* closestobstacle{};
+	//float disttoclostest = float(INFINITE);
+	//Vector2 ahead = pAgent.Position + pAgent.LinearVelocity * maxahead;
+	//Vector2 ahead2 = pAgent.Position + pAgent.LinearVelocity * maxahead * 0.5;
+
+	//for (HouseInfo* house : m_pBlackboard->GetData("Houses", m_pMemoryHouse))
+	//{
+	//	float distance = distance(house->Center, pAgent.Position);
+	//	bool intersecting = distance(house->Center, ahead) <= house->Size.x || distance(house->Center, ahead2) <= house->Size.x + 5;
+	//	if (distance < disttoclostest && intersecting)
+	//	{
+	//		disttoclostest = distance;
+	//		closestobstacle = house;
+	//	}
+	//}
+	//Vector2 avoidance = Vector2{ 0,0 };
+	////check if these calculations are inside a object
+	//if (closestobstacle != nullptr)
+	//{
+	//	avoidance.x = ahead.x - closestobstacle->Center.x;
+	//	avoidance.y = ahead.y - closestobstacle->Center.y;
+	//}
+	//else
+	//{
+	//	avoidance = Vector2{ 0,0 };
+	//}
+	//
+	auto seekSteering = Seek::CalculateSteering( pAgent);
+	//seekSteering->LinearVelocity += avoidance;
+	return seekSteering;
+}
+
+SteeringPlugin_Output* OffsetPursuit::CalculateSteering(AgentInfo pAgent)
+{
+	Vector2 displacement = m_Offset - pAgent.Position;
+	float distance = displacement.Magnitude();
+
+	/* Get the character's speed */
+	float speed = pAgent.LinearVelocity.Magnitude();
+
+	/* Calculate the prediction time */
+	const Vector2 distanceBetween = m_Target.Position - pAgent.Position;
+	const int updatesAhead = distanceBetween.Magnitude() / pAgent.MaxLinearSpeed;
+	const Vector2 futurePosition = m_Target.Position + m_Offset + m_Target.LinearVelocity * updatesAhead;
+
+	m_Target = futurePosition;
+
+	return Pursuit::CalculateSteering( pAgent);
 }

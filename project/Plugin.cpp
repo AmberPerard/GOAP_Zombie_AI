@@ -309,11 +309,12 @@ void Plugin::GetNewHousesInFOV(float deltaTime)
 	{
 		if (m_pInterface->Fov_GetHouseByIndex(i, houseInfo))
 		{
-
+			std::cout << houseInfo.Size.x << " " << houseInfo.Size.y << std::endl;
 			//// Check if we're not already aware of the entity
 			if (std::find(m_pMemoryHouse->begin(), m_pMemoryHouse->end(), houseInfo) == m_pMemoryHouse->end())
 			{
 				m_pMemoryHouse->push_back(houseInfo);
+				
 			}
 		}
 		break;

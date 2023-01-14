@@ -4,7 +4,6 @@
 #include "Exam_HelperStructs.h"
 #include "GoapAstart.h"
 #include "WorldState.h"
-#include "SteeringBehaviors/SteeringBehaviors.h"
 
 class IBaseInterface;
 class IExamInterface;

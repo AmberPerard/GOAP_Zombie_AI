@@ -12,6 +12,12 @@
 //-----------------------------------------------------------------
 #include <Exam_HelperStructs.h>
 #include "SteeringHelpers.h"
+
+namespace Elite
+{
+	class Blackboard;
+}
+
 class Obstacle;
 
 #pragma region **ISTEERINGBEHAVIOR** (BASE)
@@ -25,6 +31,7 @@ public:
 
 	//Seek Functions
 	void SetTarget(const TargetData& target) { m_Target = target; }
+	void setBlackBoard( Elite::Blackboard* pBlackboard) { m_pBlackboard = pBlackboard; }
 
 	template<class T, typename std::enable_if<std::is_base_of<ISteeringBehavior, T>::value>::type* = nullptr>
 	T* As()
@@ -32,6 +39,7 @@ public:
 
 protected:
 	TargetData m_Target;
+	 Elite::Blackboard* m_pBlackboard;
 };
 #pragma endregion
 
@@ -140,7 +148,69 @@ public:
 
 	SteeringPlugin_Output* CalculateSteering(  AgentInfo pAgent) override;
 };
+///////////////////////////////////////
+//Hide
+//****
+class Hide : public Seek
+{
+public:
+	Hide() = default;
+	virtual ~Hide() = default;
+protected:
+	SteeringPlugin_Output* CalculateSteering(AgentInfo pAgent) override;
+};
+///////////////////////////////////////
+//Interpose
+//****
+class Interpose : public Seek
+{
+public:
+	Interpose() = default;
+	virtual ~Interpose() = default;
 
+	SteeringPlugin_Output* CalculateSteering(AgentInfo pAgent) override;
+};
+
+
+///////////////////////////////////////
+//AvoidObstacle
+//****
+class AvoidObstacle : public Seek
+{
+public:
+	AvoidObstacle() = default;
+	virtual ~AvoidObstacle() = default;
+
+	SteeringPlugin_Output* CalculateSteering(AgentInfo pAgent) override;
+private:
+	std::vector<HouseInfo>* m_pMemoryHouse{};
+};
+
+///////////////////////////////////////
+//Offest Pursuit
+//****
+class OffsetPursuit : public Pursuit
+{
+public:
+	OffsetPursuit() = default;
+	virtual ~OffsetPursuit() = default;
+
+protected:
+	Elite::Vector2 m_Offset{ 2,2 };
+	SteeringPlugin_Output* CalculateSteering( AgentInfo pAgent) override;
+};
+
+///////////////////////////////////////
+//Align
+//****
+class Align : public Face
+{
+public:
+	Align() = default;
+	virtual ~Align() = default;
+
+	SteeringPlugin_Output* CalculateSteering(AgentInfo pAgent) override;
+};
 
 #endif
 
