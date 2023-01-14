@@ -11,6 +11,7 @@ to another. */
 struct WorldState
 {
 public:
+	virtual ~WorldState() = default;
 	WorldState(const std::string& name = "", int priority = 100);
 
 	bool operator==(const WorldState& otherState) const;
@@ -39,7 +40,9 @@ inline std::ostream& operator<<(std::ostream& out, const WorldState& ws)
 	out << "}";
 	return out;
 }
-
+///////////////////////////////////////
+//GOAL: EXPLORE THE WORLD
+//****
 struct Goal_ExploreWorld final : WorldState
 {
 public:
@@ -48,13 +51,75 @@ public:
 		SetCondition("exploring", true);
 	}
 };
-
+///////////////////////////////////////
+//GOAL: LOOT HOUSE
+//****
 struct Goal_LootHouse final : WorldState
 {
 public:
 	Goal_LootHouse() : WorldState("LootHouse", 100)
 	{
 		SetCondition("targetInRange", true);
+	}
+	bool IsValid(Elite::Blackboard* pBlackboard) const override;
+};
+///////////////////////////////////////
+//GOAL: GARB FOOD
+//****
+struct Goal_GrabFood final : WorldState
+{
+public:
+	Goal_GrabFood() : WorldState("GrabFood", 300)
+	{
+		SetCondition("foodInInv", true);
+	}
+	bool IsValid(Elite::Blackboard* pBlackboard) const override;
+};
+///////////////////////////////////////
+//GOAL: GARB MEDKIT
+//****
+struct Goal_GrabMedkit final : WorldState
+{
+public:
+	Goal_GrabMedkit() : WorldState("GrabMedkit", 250)
+	{
+		SetCondition("medkitInInv", true);
+	}
+	bool IsValid(Elite::Blackboard* pBlackboard) const override;
+};
+///////////////////////////////////////
+//GOAL: GARB PISTOL
+//****
+struct Goal_GrabPistol final : WorldState
+{
+public:
+	Goal_GrabPistol() : WorldState("GrabPistol", 200)
+	{
+		SetCondition("pistolInInv", true);
+	}
+	bool IsValid(Elite::Blackboard* pBlackboard) const override;
+};
+///////////////////////////////////////
+//GOAL: GARB SHOTGUN
+//****
+struct Goal_GrabShotgun final : WorldState
+{
+public:
+	Goal_GrabShotgun() : WorldState("GrabShotgun", 200)
+	{
+		SetCondition("shotgunInInv", true);
+	}
+	bool IsValid(Elite::Blackboard* pBlackboard) const override;
+};
+///////////////////////////////////////
+//GOAL: DESTROY GARBAGE
+//****
+struct Goal_DestroyGarbage final : WorldState
+{
+public:
+	Goal_DestroyGarbage() : WorldState("destroyGarbage", 60)
+	{
+		SetCondition("destroyedGarbage", true);
 	}
 	bool IsValid(Elite::Blackboard* pBlackboard) const override;
 };

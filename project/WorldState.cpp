@@ -91,3 +91,104 @@ bool Goal_LootHouse::IsValid(Elite::Blackboard* pBlackboard) const
 
     return closest < INFINITY;
 }
+
+bool Goal_GrabFood::IsValid(Elite::Blackboard* pBlackboard) const
+{
+    WorldState* m_pWorldState;
+    if (!pBlackboard->GetData("WorldState", m_pWorldState)) return false;
+    if (m_pWorldState->getCondition("foodInInv")) return false;
+
+    std::vector<ItemInfo>* foods;
+    if (!pBlackboard->GetData("Food", foods) || foods->empty() || foods == nullptr) return false;
+
+    IExamInterface* pInterface;
+    if (!pBlackboard->GetData("pInterface", pInterface) || pInterface == nullptr) return false;
+
+    AgentInfo agentInfo;
+    if (!pBlackboard->GetData("AgentInfo", agentInfo)) return false;
+
+    if (!pBlackboard->ChangeData("Target", foods->back().Location)) return false;
+    if (!pBlackboard->ChangeData("TargetItem", foods->back())) return false;
+
+	return true;
+}
+
+bool Goal_GrabMedkit::IsValid(Elite::Blackboard* pBlackboard) const
+{
+    WorldState* m_pWorldState;
+    if (!pBlackboard->GetData("WorldState", m_pWorldState)) return false;
+    if (m_pWorldState->getCondition("medkitInInv")) return false;
+
+    std::vector<ItemInfo>* medkits;
+    if (!pBlackboard->GetData("Medkits", medkits) || medkits->empty() || medkits == nullptr) return false;
+
+    IExamInterface* pInterface;
+    if (!pBlackboard->GetData("pInterface", pInterface) || pInterface == nullptr) return false;
+
+    AgentInfo agentInfo;
+    if (!pBlackboard->GetData("AgentInfo", agentInfo)) return false;
+
+    if (!pBlackboard->ChangeData("Target", medkits->back().Location)) return false;
+    if (!pBlackboard->ChangeData("TargetItem", medkits->back())) return false;
+
+    return true;
+}
+
+bool Goal_GrabPistol::IsValid(Elite::Blackboard* pBlackboard) const
+{
+    WorldState* m_pWorldState;
+    if (!pBlackboard->GetData("WorldState", m_pWorldState)) return false;
+    if (m_pWorldState->getCondition("pistolInInv")) return false;
+
+    std::vector<ItemInfo>* pistols;
+    if (!pBlackboard->GetData("Pistols", pistols) || pistols->empty() || pistols == nullptr) return false;
+
+    IExamInterface* pInterface;
+    if (!pBlackboard->GetData("pInterface", pInterface) || pInterface == nullptr) return false;
+
+    AgentInfo agentInfo;
+    if (!pBlackboard->GetData("AgentInfo", agentInfo)) return false;
+
+    if (!pBlackboard->ChangeData("Target", pistols->back().Location)) return false;
+    if (!pBlackboard->ChangeData("TargetItem", pistols->back())) return false;
+
+    return true;
+}
+
+bool Goal_GrabShotgun::IsValid(Elite::Blackboard* pBlackboard) const
+{
+    WorldState* m_pWorldState;
+    if (!pBlackboard->GetData("WorldState", m_pWorldState)) return false;
+    if (m_pWorldState->getCondition("shotgunInInv")) return false;
+
+    std::vector<ItemInfo>* shotguns;
+    if (!pBlackboard->GetData("Shotguns", shotguns) || shotguns->empty() || shotguns == nullptr) return false;
+
+    IExamInterface* pInterface;
+    if (!pBlackboard->GetData("pInterface", pInterface) || pInterface == nullptr) return false;
+
+    AgentInfo agentInfo;
+    if (!pBlackboard->GetData("AgentInfo", agentInfo)) return false;
+
+    if (!pBlackboard->ChangeData("Target", shotguns->back().Location)) return false;
+    if (!pBlackboard->ChangeData("TargetItem", shotguns->back())) return false;
+
+    return true;
+}
+
+bool Goal_DestroyGarbage::IsValid(Elite::Blackboard* pBlackboard) const
+{
+    WorldState* m_pWorldState;
+    if (!pBlackboard->GetData("WorldState", m_pWorldState)) return false;
+
+    std::vector<EntityInfo>* garbages;
+    if (!pBlackboard->GetData("Garbage", garbages) || garbages->empty() || garbages == nullptr) return false;
+
+    IExamInterface* pInterface;
+    if (!pBlackboard->GetData("pInterface", pInterface) || pInterface == nullptr) return false;
+
+    AgentInfo agentInfo;
+    if (!pBlackboard->GetData("AgentInfo", agentInfo)) return false;
+
+    return true;
+}

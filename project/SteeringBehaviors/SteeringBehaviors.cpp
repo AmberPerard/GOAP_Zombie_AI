@@ -12,8 +12,7 @@ SteeringPlugin_Output* Seek::CalculateSteering( AgentInfo pAgent)
 {
 	SteeringPlugin_Output* pSteering{new SteeringPlugin_Output()};
 
-	pSteering->LinearVelocity = m_Target.Position - pAgent.Position;
-	pSteering->LinearVelocity.Normalize();
+	pSteering->LinearVelocity = (m_pInterface->NavMesh_GetClosestPathPoint(m_Target.Position) - pAgent.Position).GetNormalized();
 	pSteering->LinearVelocity *= pAgent.MaxLinearSpeed;
 
 	return pSteering;
@@ -23,11 +22,8 @@ SteeringPlugin_Output* Flee::CalculateSteering( AgentInfo pAgent)
 {
 	SteeringPlugin_Output* pSteering{ new SteeringPlugin_Output() };
 	const Vector2 toTarget = pAgent.Position - m_Target.Position;
-	const float distanceSquared = toTarget.MagnitudeSquared();
 
-
-	pSteering->LinearVelocity = pAgent.Position - m_Target.Position;
-	pSteering->LinearVelocity.Normalize();
+	pSteering->LinearVelocity = (m_pInterface->NavMesh_GetClosestPathPoint(pAgent.Position) - m_Target.Position).GetNormalized();
 	pSteering->LinearVelocity *= pAgent.MaxLinearSpeed;
 
 	return pSteering;
@@ -225,7 +221,7 @@ SteeringPlugin_Output* OffsetPursuit::CalculateSteering(AgentInfo pAgent)
 
 	/* Calculate the prediction time */
 	const Vector2 distanceBetween = m_Target.Position - pAgent.Position;
-	const int updatesAhead = distanceBetween.Magnitude() / pAgent.MaxLinearSpeed;
+	const float updatesAhead = distanceBetween.Magnitude() / pAgent.MaxLinearSpeed;
 	const Vector2 futurePosition = m_Target.Position + m_Offset + m_Target.LinearVelocity * updatesAhead;
 
 	m_Target = futurePosition;

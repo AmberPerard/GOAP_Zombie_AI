@@ -25,7 +25,7 @@ void Plugin::Initialize(IBaseInterface* pInterface, PluginInfo& info)
 	m_pMemoryShotGuns = new std::vector<ItemInfo>;
 	m_pMemoryMedKits = new std::vector<ItemInfo>;
 	m_pMemoryFood = new std::vector<ItemInfo>;
-	m_pMemoryGarbage = new std::vector<ItemInfo>;
+	m_pMemoryGarbage = new std::vector<EntityInfo>;
 
 	CreateBlackboard();
 	InitializeWorldState();
@@ -228,7 +228,7 @@ void Plugin::GetEntitiesInFOV()
 					m_WorldState.SetCondition("savedFood", true);
 					break;
 				case eItemType::GARBAGE:
-					m_pMemoryGarbage->emplace_back(item);
+					m_pMemoryGarbage->emplace_back(entityInfo);
 					m_WorldState.SetCondition("savedGarbage", true);
 					break;
 				default:
@@ -248,7 +248,7 @@ void Plugin::CreateBlackboard()
 	m_pBlackboard->AddData("TargetItem", ItemInfo{});
 	m_pBlackboard->AddData("InventorySlot", 0U);
 	m_pBlackboard->AddData("Target", Elite::Vector2{});
-	m_pBlackboard->AddData("pSteering",m_pSteering);
+	m_pBlackboard->AddData("pSteering", m_pSteering);
 	m_pBlackboard->AddData("pInterface", m_pInterface);
 
 	// Entities
@@ -294,12 +294,22 @@ void Plugin::AddActions()
 {
 	m_pActions.push_back(new GOAP::Action_Explore);
 	m_pActions.push_back(new GOAP::Action_MoveTo);
+	m_pActions.push_back(new GOAP::Action_GrabFood);
+	m_pActions.push_back(new GOAP::Action_GrabMedkit);
+	m_pActions.push_back(new GOAP::Action_GrabPistol);
+	m_pActions.push_back(new GOAP::Action_GrabShotGun);
+	m_pActions.push_back(new GOAP::Action_DestroyGarbage);
 }
 
 void Plugin::AddGoals()
 {
 	m_pGoals.push_back(new Goal_ExploreWorld);
 	m_pGoals.push_back(new Goal_LootHouse);
+	m_pGoals.push_back(new Goal_GrabFood);
+	m_pGoals.push_back(new Goal_GrabMedkit);
+	m_pGoals.push_back(new Goal_GrabPistol);
+	m_pGoals.push_back(new Goal_GrabShotgun);
+	m_pGoals.push_back(new Goal_DestroyGarbage);
 }
 
 void Plugin::GetNewHousesInFOV(float deltaTime)
@@ -314,7 +324,7 @@ void Plugin::GetNewHousesInFOV(float deltaTime)
 			if (std::find(m_pMemoryHouse->begin(), m_pMemoryHouse->end(), houseInfo) == m_pMemoryHouse->end())
 			{
 				m_pMemoryHouse->push_back(houseInfo);
-				
+
 			}
 		}
 		break;
@@ -354,10 +364,10 @@ bool Plugin::ExecutingPlan()
 
 	// There are still actions in the plan, execute the first action in line
 	BaseGoapAction* currentAction = m_pPlan.back();
-	if (!currentAction->IsValid(m_pBlackboard))
+	if (!currentAction->checkProceduralPreconditions(m_pBlackboard))
 	{
 		m_CurrentGoal = GetHighestPriorityGoal();
-		FindingPath(m_WorldState,*m_CurrentGoal,m_pActions);
+		FindingPath(m_WorldState, *m_CurrentGoal, m_pActions);
 		return true;
 	}
 	else if (currentAction->Execute(m_pBlackboard))

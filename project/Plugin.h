@@ -52,7 +52,7 @@ private:
 	std::vector<ItemInfo>* m_pMemoryShotGuns{};
 	std::vector<ItemInfo>* m_pMemoryMedKits{};
 	std::vector<ItemInfo>* m_pMemoryFood{};
-	std::vector<ItemInfo>* m_pMemoryGarbage{};
+	std::vector<EntityInfo>* m_pMemoryGarbage{};
 
 	// In current FOV
 	std::vector<EntityInfo> m_EntitiesInFov{};

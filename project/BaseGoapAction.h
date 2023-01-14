@@ -21,7 +21,6 @@ public:
 
 	virtual bool ConditionsMetByWorld(const WorldState& worldState);
 	virtual WorldState ApplyActionOnWorld(const WorldState& worldState) const;
-	virtual bool IsValid(Elite::Blackboard* pBlackboard);
 
 	std::string GetName() { return m_Name; };
 

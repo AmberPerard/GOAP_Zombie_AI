@@ -11,6 +11,8 @@
 // Includes & Forward Declarations
 //-----------------------------------------------------------------
 #include <Exam_HelperStructs.h>
+#include <IExamInterface.h>
+
 #include "SteeringHelpers.h"
 
 namespace Elite
@@ -32,6 +34,7 @@ public:
 	//Seek Functions
 	void SetTarget(const TargetData& target) { m_Target = target; }
 	void setBlackBoard( Elite::Blackboard* pBlackboard) { m_pBlackboard = pBlackboard; }
+	void setInterface(IExamInterface* pInterface) { m_pInterface = pInterface; }
 
 	template<class T, typename std::enable_if<std::is_base_of<ISteeringBehavior, T>::value>::type* = nullptr>
 	T* As()
@@ -40,6 +43,7 @@ public:
 protected:
 	TargetData m_Target;
 	 Elite::Blackboard* m_pBlackboard;
+	 IExamInterface* m_pInterface = nullptr;
 };
 #pragma endregion
 

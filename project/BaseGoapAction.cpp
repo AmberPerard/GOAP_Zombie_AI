@@ -37,8 +37,3 @@ WorldState BaseGoapAction::ApplyActionOnWorld(const WorldState& worldState) cons
     }
     return tmpWorldState;
 }
-
-bool BaseGoapAction::IsValid(Elite::Blackboard* pBlackboard)
-{
-    return true;
-}
