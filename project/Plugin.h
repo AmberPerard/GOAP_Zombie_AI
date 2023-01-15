@@ -34,14 +34,6 @@ private:
 	bool CheckIfInisdePurgeZone();
 
 	Elite::Vector2 m_Target = {};
-	bool m_CanRun = false; //Demo purpose
-	bool m_GrabItem = false; //Demo purpose
-	bool m_UseItem = false; //Demo purpose
-	bool m_RemoveItem = false; //Demo purpose
-	float m_AngSpeed = 0.f; //Demo purpose
-
-	UINT m_InventorySlot = 0;
-	UINT m_ItemsInInventory = 0;
 
 	//steering
 	SteeringPlugin_Output* m_pSteering{};
@@ -70,6 +62,9 @@ private:
 	WorldState* m_CurrentGoal{};
 	GoapAstar m_ASPlanner{};
 
+	//timer
+	float m_DeltaTime = 0.f;
+
 	Elite::Blackboard* m_pBlackboard{};
 	void CreateBlackboard();
 	void InitializeWorldState();
@@ -83,7 +78,7 @@ private:
 
 	template<typename T>
 	void SortEntitiesByDistance(std::vector<T>* entities);
-
+	void updateHousesInMemory();
 };
 
 //ENTRY

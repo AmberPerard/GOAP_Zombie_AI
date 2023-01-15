@@ -32,8 +32,10 @@ bool GOAP::Action_Explore::Execute(Elite::Blackboard* pBlackboard)
 	m_pSeek->setBlackBoard(pBlackboard);
 
 	auto sizeWorld = m_pInterface->World_GetInfo().Dimensions;
-	sizeWorld.y -= 200;
-	sizeWorld.x -= 200;
+	sizeWorld.y *= 0.5f;
+	sizeWorld.x *= 0.5f;
+
+	m_pInterface->Draw_Circle(m_pInterface->World_GetInfo().Center, sizeWorld.y, { 0,0,0 }, 0.5f);
 
 	std::random_device rd;
 	std::default_random_engine generator(rd());
@@ -49,72 +51,116 @@ bool GOAP::Action_Explore::Execute(Elite::Blackboard* pBlackboard)
 	}
 	m_pSeek->SetTarget(m_OldWanderPost);
 	*m_pSteering = *m_pSeek->CalculateSteering(m_AgentInfo);
-	m_pSteering->AutoOrient = true;
-	m_pSteering->RunMode = false;
+	if (m_AgentInfo.Stamina > 4.0f)
+		m_pSteering->RunMode = true;
+	else if (m_AgentInfo.Stamina < 4.f)
+		m_pSteering->RunMode = false;
+
+	//m_pSteering->AutoOrient = false;
+	//m_pSteering->AngularVelocity += m_AgentInfo.MaxAngularSpeed;
 	return false;
 }
 ///////////////////////////////////////
 //LOOT HOUSE
 //****
-GOAP::Action_LootHouse::Action_LootHouse()
-	: BaseGoapAction("Loothouse", 5)
+GOAP::Action_MoveTo::Action_MoveTo()
+	: BaseGoapAction("MoveTo", 5)
 	, m_pSteering(new SteeringPlugin_Output())
 {
 	BaseGoapAction::SetEffect("targetInRange", true);
 	m_pSeek = new Seek();
 }
 
-GOAP::Action_LootHouse::~Action_LootHouse()
+GOAP::Action_MoveTo::~Action_MoveTo()
 {
 	delete m_pSeek;
 	m_pSeek = nullptr;
 }
 
-bool GOAP::Action_LootHouse::checkProceduralPreconditions(Elite::Blackboard* pBlackboard)
+bool GOAP::Action_MoveTo::checkProceduralPreconditions(Elite::Blackboard* pBlackboard)
 {
 	return BaseGoapAction::checkProceduralPreconditions(pBlackboard)
 		&& pBlackboard->GetData("Target", m_Target)
 		&& pBlackboard->GetData("AgentInfo", m_AgentInfo)
 		&& pBlackboard->GetData("pSteering", m_pSteering)
 		&& pBlackboard->GetData("pInterface", m_pInterface)
-		&& pBlackboard->GetData("WorldState", m_pWorldState);
+		&& pBlackboard->GetData("WorldState", m_pWorldState)
+		&& pBlackboard->GetData("TargetHouse", m_TargetHouse)
+		&& pBlackboard->GetData("deltaTime", m_DeltaTime);
 }
 
-bool GOAP::Action_LootHouse::Execute(Elite::Blackboard* pBlackboard)
+bool GOAP::Action_MoveTo::Execute(Elite::Blackboard* pBlackboard)
 {
-	if (m_AgentInfo.Position.DistanceSquared(m_Target) <= (m_AgentInfo.GrabRange))
+	Elite::Vector2 currentVisitPoint{};
+	bool isInHouse = false;
+	if (m_TargetHouse->Location == m_Target)
 	{
-		m_pSteering->LinearVelocity = Elite::ZeroVector2;
-		return true;
+		if (!m_TargetHouse->visitedTop)
+		{
+			currentVisitPoint = m_TargetHouse->topPoint;
+		}
+		else
+		{
+			currentVisitPoint = m_TargetHouse->bottomPoint;
+		}
+
+		m_pSeek->SetTarget(currentVisitPoint);
+		m_pInterface->Draw_Point(currentVisitPoint, 10, { 1,0,0 });
+
+		if (m_AgentInfo.Position.Distance(m_TargetHouse->topPoint) <=m_AgentInfo.GrabRange && currentVisitPoint == m_TargetHouse->topPoint)
+		{
+			m_ArrivedStartSpinTimer += m_DeltaTime;
+			isInHouse = true;
+			if (m_ArrivedStartSpinTimer >= 5.f)
+			{
+				isInHouse = false;
+				m_ArrivedStartSpinTimer = 0.f;
+				currentVisitPoint = m_TargetHouse->bottomPoint;
+				m_TargetHouse->visitedTop = true;
+			}
+		}
+		if (m_AgentInfo.Position.Distance(m_TargetHouse->bottomPoint) <= m_AgentInfo.GrabRange && m_TargetHouse->visitedTop)
+		{
+
+			m_ArrivedStartSpinTimer += m_DeltaTime;
+			isInHouse = true;
+			if (m_ArrivedStartSpinTimer >= 5.f)
+			{
+				m_pSteering->LinearVelocity = Elite::ZeroVector2;
+				m_ArrivedStartSpinTimer = 0.f;
+				isInHouse = false;
+				m_TargetHouse->visitedTop = false;
+				return true;
+			}
+			return false;
+		}
 	}
-	//if (!m_TargetHouse->visitedTop)
-	//{
-	//	currentVisitPoint = m_TargetHouse->topPoint;
-	//}else
-	//{
-	//	currentVisitPoint = m_TargetHouse->bottomPoint;
-	//}
-	m_pSeek->SetTarget(m_Target);
+	else
+	{
+		isInHouse = false;
+		m_pSeek->SetTarget(m_Target);
+
+		if (m_AgentInfo.Position.Distance(m_Target) <= (m_AgentInfo.GrabRange))
+		{
+			m_pSteering->LinearVelocity = Elite::ZeroVector2;
+			return true;
+		}
+	}
 	m_pSeek->setInterface(m_pInterface);
 	m_pSeek->setBlackBoard(pBlackboard);
 
-	//m_pInterface->Draw_Point(currentVisitPoint, 10, { 1,0,0 });
+	*m_pSteering = *m_pSeek->CalculateSteering(m_AgentInfo);
+	if(isInHouse)
+	{
+		m_pSteering->LinearVelocity = Elite::ZeroVector2;
+		m_pSteering->AutoOrient = false;
+		m_pSteering->AngularVelocity = 1 * m_AgentInfo.MaxAngularSpeed;
+	}
+	if (m_AgentInfo.Stamina > 10.0f)
+		m_pSteering->RunMode = true;
+	else if (m_AgentInfo.Stamina < 4.f)
+		m_pSteering->RunMode = false;
 
-	//if (m_AgentInfo.Position.DistanceSquared(m_TargetHouse->topPoint) <= m_AgentInfo.GrabRange * m_AgentInfo.GrabRange)
-	//{
-	//	currentVisitPoint = m_TargetHouse->bottomPoint;
-	//	m_TargetHouse->visitedTop = true;
-	//}
-
-	//if (m_AgentInfo.Position.DistanceSquared(m_TargetHouse->bottomPoint) <= m_AgentInfo.GrabRange * m_AgentInfo.GrabRange)
-	//{
-	//	m_pSteering->LinearVelocity = Elite::ZeroVector2;
-	//	return true;
-	//}
-
-	//m_pSeek->SetTarget(currentVisitPoint);
-
-	* m_pSteering = *m_pSeek->CalculateSteering(m_AgentInfo);
 	return false;
 }
 ///////////////////////////////////////
@@ -128,9 +174,8 @@ GOAP::Action_GrabFood::Action_GrabFood()
 
 	BaseGoapAction::SetPrecondition("targetInRange", true);
 	BaseGoapAction::SetPrecondition("savedFood", true);
-	BaseGoapAction::SetPrecondition("foodInInv", false);
+	//BaseGoapAction::SetPrecondition("foodInInv", false);
 	m_pSeek = new Seek();
-	m_pFace = new Face();
 }
 
 GOAP::Action_GrabFood::~Action_GrabFood()
@@ -152,33 +197,54 @@ bool GOAP::Action_GrabFood::checkProceduralPreconditions(Elite::Blackboard* pBla
 
 bool GOAP::Action_GrabFood::Execute(Elite::Blackboard* pBlackboard)
 {
+	const Elite::Vector2 directionTarget{ (m_TargetItem.Location - m_AgentInfo.Position).GetNormalized() };
+	const Elite::Vector2 directionAgent{ cosf(m_AgentInfo.Orientation),sinf(m_AgentInfo.Orientation) };
+	const float delta_angle = Elite::AngleBetween(directionAgent, directionTarget);
+
 	ItemInfo* temp = new ItemInfo{};
 	temp->Type = eItemType::FOOD;
 	temp->ItemHash = m_TargetItem.EntityHash;
 	temp->Location = m_TargetItem.Location;
-	*m_pSteering = *m_pFace->CalculateSteering(m_AgentInfo);
-	const Elite::Vector2 dir_vector = (m_TargetItem.Location - m_AgentInfo.Position).GetNormalized();
 
-	const float target_angle = atan2f(dir_vector.y, dir_vector.x);
-	const float agent_angle = m_AgentInfo.Orientation;
-	const float delta_angle = target_angle - agent_angle;
-
-	if (abs(delta_angle) <= 2.f)
+	if (abs(delta_angle) <= m_ErrorAngle)
 	{
 		if (m_pInterface->Item_Grab(m_TargetItem, *temp))
 		{
-			m_pInterface->Inventory_AddItem(3U, *temp);
-			m_pFood->pop_back();
-			if (m_pFood->empty())
+			ItemInfo* tempInv = new ItemInfo{};
+			if (!m_pInterface->Inventory_GetItem(3U, *tempInv))
 			{
-				m_pWorldState->SetCondition("savedFood", false);
+				m_pInterface->Inventory_AddItem(3U, *temp);
+				m_pFood->pop_back();
+				if (m_pFood->empty())
+				{
+					m_pWorldState->SetCondition("savedFood", false);
+				}
+				*m_pWorldState = ApplyActionOnWorld(*m_pWorldState);
+				return true;
 			}
-			*m_pWorldState = ApplyActionOnWorld(*m_pWorldState);
+			if (m_pInterface->Food_GetEnergy(*temp) >= m_pInterface->Food_GetEnergy(*tempInv))
+			{
+				if (m_AgentInfo.Energy < 10)
+				{
+					m_pInterface->Inventory_UseItem(3U);
+				}
+				m_pInterface->Inventory_AddItem(3U, *temp);
+				m_pFood->pop_back();
+				if (m_pFood->empty())
+				{
+					m_pWorldState->SetCondition("savedFood", false);
+				}
+				*m_pWorldState = ApplyActionOnWorld(*m_pWorldState);
+				return true;
+			}
 			return true;
 		}
 		return false;
 	}
-
+	//make agent look at the target
+	m_pSteering->AutoOrient = false;
+	m_pSteering->AngularVelocity += delta_angle;
+	m_pSteering->AngularVelocity *= m_AgentInfo.MaxAngularSpeed;
 	return false;
 }
 ///////////////////////////////////////
@@ -190,10 +256,9 @@ GOAP::Action_GrabMedkit::Action_GrabMedkit()
 {
 	BaseGoapAction::SetPrecondition("targetInRange", true);
 	BaseGoapAction::SetPrecondition("savedMedkit", true);
-	BaseGoapAction::SetPrecondition("medkitInInv", false);
+	//BaseGoapAction::SetPrecondition("medkitInInv", false);
 	BaseGoapAction::SetEffect("medkitInInv", true);
 	m_pSeek = new Seek();
-	m_pFace = new Face();
 }
 
 GOAP::Action_GrabMedkit::~Action_GrabMedkit()
@@ -215,34 +280,57 @@ bool GOAP::Action_GrabMedkit::checkProceduralPreconditions(Elite::Blackboard* pB
 
 bool GOAP::Action_GrabMedkit::Execute(Elite::Blackboard* pBlackboard)
 {
+	const Elite::Vector2 directionTarget{ (m_TargetItem.Location - m_AgentInfo.Position).GetNormalized() };
+	const Elite::Vector2 directionAgent{ cosf(m_AgentInfo.Orientation),sinf(m_AgentInfo.Orientation) };
+	const float delta_angle = Elite::AngleBetween(directionAgent, directionTarget);
+
 	ItemInfo* temp = new ItemInfo{};
 	temp->Type = eItemType::MEDKIT;
 	temp->ItemHash = m_TargetItem.EntityHash;
 	temp->Location = m_TargetItem.Location;
-	*m_pSteering = *m_pFace->CalculateSteering(m_AgentInfo);
-	const Elite::Vector2 dir_vector = (m_TargetItem.Location - m_AgentInfo.Position).GetNormalized();
 
-	const float target_angle = atan2f(dir_vector.y, dir_vector.x);
-	const float agent_angle = m_AgentInfo.Orientation;
-	const float delta_angle = target_angle - agent_angle;
+	m_pSteering->AutoOrient = false;
+	m_pSteering->LinearVelocity = Elite::ZeroVector2;
 
-	if (abs(delta_angle) <= 2.f)
+	if (abs(delta_angle) <= m_ErrorAngle)
 	{
+
 		if (m_pInterface->Item_Grab(m_TargetItem, *temp))
 		{
-			m_pInterface->Inventory_AddItem(2U, *temp);
-			m_pMedkits->pop_back();
-			if (m_pMedkits->empty())
+			ItemInfo* tempInv = new ItemInfo{};
+			if (!m_pInterface->Inventory_GetItem(2U, *tempInv))
 			{
-				m_pWorldState->SetCondition("savedMedkit", false);
+				m_pInterface->Inventory_AddItem(2U, *temp);
+				m_pMedkits->pop_back();
+				if (m_pMedkits->empty())
+				{
+					m_pWorldState->SetCondition("savedMedkit", false);
+				}
+				*m_pWorldState = ApplyActionOnWorld(*m_pWorldState);
+				return true;
 			}
-			*m_pWorldState = ApplyActionOnWorld(*m_pWorldState);
+			if (m_pInterface->Medkit_GetHealth(*temp) >= m_pInterface->Medkit_GetHealth(*tempInv))
+			{
+				if (m_AgentInfo.Health < 10)
+				{
+					m_pInterface->Inventory_UseItem(2U);
+				}
+				m_pInterface->Inventory_AddItem(2U, *temp);
+				m_pMedkits->pop_back();
+				if (m_pMedkits->empty())
+				{
+					m_pWorldState->SetCondition("savedMedkit", false);
+				}
+				*m_pWorldState = ApplyActionOnWorld(*m_pWorldState);
+				return true;
+			}
 			return true;
 		}
 		return false;
 	}
-
-
+	//make agent look at the target
+	m_pSteering->AngularVelocity += delta_angle;
+	m_pSteering->AngularVelocity *= m_AgentInfo.MaxAngularSpeed;
 	return false;
 }
 ///////////////////////////////////////
@@ -254,10 +342,9 @@ GOAP::Action_GrabPistol::Action_GrabPistol()
 {
 	BaseGoapAction::SetPrecondition("targetInRange", true);
 	BaseGoapAction::SetPrecondition("savedPistol", true);
-	BaseGoapAction::SetPrecondition("pistolInInv", false);
+	//BaseGoapAction::SetPrecondition("pistolInInv", false);
 	BaseGoapAction::SetEffect("pistolInInv", true);
 	m_pSeek = new Seek();
-	m_pFace = new Face();
 }
 
 GOAP::Action_GrabPistol::~Action_GrabPistol()
@@ -279,32 +366,54 @@ bool GOAP::Action_GrabPistol::checkProceduralPreconditions(Elite::Blackboard* pB
 
 bool GOAP::Action_GrabPistol::Execute(Elite::Blackboard* pBlackboard)
 {
+	const Elite::Vector2 directionTarget{ (m_TargetItem.Location - m_AgentInfo.Position).GetNormalized() };
+	const Elite::Vector2 directionAgent{ cosf(m_AgentInfo.Orientation),sinf(m_AgentInfo.Orientation) };
+	const float delta_angle = Elite::AngleBetween(directionAgent, directionTarget);
+
 	ItemInfo* temp = new ItemInfo{};
 	temp->Type = eItemType::PISTOL;
 	temp->ItemHash = m_TargetItem.EntityHash;
 	temp->Location = m_TargetItem.Location;
-	*m_pSteering = *m_pFace->CalculateSteering(m_AgentInfo);
-	const Elite::Vector2 dir_vector = (m_TargetItem.Location - m_AgentInfo.Position).GetNormalized();
 
-	const float target_angle = atan2f(dir_vector.y, dir_vector.x);
-	const float agent_angle = m_AgentInfo.Orientation;
-	const float delta_angle = target_angle - agent_angle;
+	m_pSteering->AutoOrient = false;
 
-	if (abs(delta_angle) <= 2.f)
+	if (abs(delta_angle) <= m_ErrorAngle)
 	{
 		if (m_pInterface->Item_Grab(m_TargetItem, *temp))
 		{
-			m_pInterface->Inventory_AddItem(0U, *temp);
-			m_pPistol->pop_back();
-			if (m_pPistol->empty())
+			ItemInfo* tempInv = new ItemInfo{};
+			if (!m_pInterface->Inventory_GetItem(0U, *tempInv))
 			{
-				m_pWorldState->SetCondition("savedPistol", false);
+				m_pInterface->Inventory_AddItem(0U, *temp);
+				m_pPistol->pop_back();
+				if (m_pPistol->empty())
+				{
+					m_pWorldState->SetCondition("savedPistol", false);
+				}
+				*m_pWorldState = ApplyActionOnWorld(*m_pWorldState);
+				return true;
 			}
-			*m_pWorldState = ApplyActionOnWorld(*m_pWorldState);
-			return true;
-		}return false;
+			if (m_pInterface->Weapon_GetAmmo(*temp) >= m_pInterface->Weapon_GetAmmo(*tempInv))
+			{
+
+				m_pInterface->Inventory_RemoveItem(0U);
+				m_pInterface->Inventory_AddItem(0U, *temp);
+				m_pPistol->pop_back();
+				if (m_pPistol->empty())
+				{
+					m_pWorldState->SetCondition("savedPistol", false);
+				}
+				*m_pWorldState = ApplyActionOnWorld(*m_pWorldState);
+				m_pSteering->AutoOrient = true;
+				return true;
+			}return false;
+		}
+		return true;
 	}
 
+	//make agent look at the target
+	m_pSteering->AngularVelocity += delta_angle;
+	m_pSteering->AngularVelocity *= m_AgentInfo.MaxAngularSpeed;
 	return false;
 }
 ///////////////////////////////////////
@@ -316,10 +425,9 @@ GOAP::Action_GrabShotGun::Action_GrabShotGun()
 {
 	BaseGoapAction::SetPrecondition("targetInRange", true);
 	BaseGoapAction::SetPrecondition("savedShotgun", true);
-	BaseGoapAction::SetPrecondition("shotgunInInv", false);
+	//BaseGoapAction::SetPrecondition("shotgunInInv", false);
 	BaseGoapAction::SetEffect("shotgunInInv", true);
 	m_pSeek = new Seek();
-	m_pFace = new Face();
 }
 
 GOAP::Action_GrabShotGun::~Action_GrabShotGun()
@@ -341,33 +449,55 @@ bool GOAP::Action_GrabShotGun::checkProceduralPreconditions(Elite::Blackboard* p
 
 bool GOAP::Action_GrabShotGun::Execute(Elite::Blackboard* pBlackboard)
 {
+	const Elite::Vector2 directionTarget{ (m_TargetItem.Location - m_AgentInfo.Position).GetNormalized() };
+	const Elite::Vector2 directionAgent{ cosf(m_AgentInfo.Orientation),sinf(m_AgentInfo.Orientation) };
+	const float delta_angle = Elite::AngleBetween(directionAgent, directionTarget);
+
 	ItemInfo* temp = new ItemInfo{};
 	temp->Type = eItemType::SHOTGUN;
 	temp->ItemHash = m_TargetItem.EntityHash;
 	temp->Location = m_TargetItem.Location;
-	*m_pSteering = *m_pFace->CalculateSteering(m_AgentInfo);
-	const Elite::Vector2 dir_vector = (m_TargetItem.Location - m_AgentInfo.Position).GetNormalized();
 
-	const float target_angle = atan2f(dir_vector.y, dir_vector.x);
-	const float agent_angle = m_AgentInfo.Orientation;
-	const float delta_angle = target_angle - agent_angle;
 
-	if (abs(delta_angle) <= 2.f)
+	m_pSteering->AutoOrient = false;
+	//m_pSteering->LinearVelocity = Elite::ZeroVector2;
+
+	if (abs(delta_angle) <= m_ErrorAngle)
 	{
 		if (m_pInterface->Item_Grab(m_TargetItem, *temp))
 		{
-			m_pInterface->Inventory_AddItem(1U, *temp);
-			m_pShotgun->pop_back();
-			if (m_pShotgun->empty())
+			ItemInfo* tempInv = new ItemInfo{};
+			if (!m_pInterface->Inventory_GetItem(1U, *tempInv))
 			{
-				m_pWorldState->SetCondition("savedShotgun", false);
+				m_pInterface->Inventory_AddItem(1U, *temp);
+				m_pShotgun->pop_back();
+				if (m_pShotgun->empty())
+				{
+					m_pWorldState->SetCondition("savedShotgun", false);
+				}
+				*m_pWorldState = ApplyActionOnWorld(*m_pWorldState);
+				return true;
 			}
-			*m_pWorldState = ApplyActionOnWorld(*m_pWorldState);
-			return true;
-		}
-		return false;
-	}
+			if (m_pInterface->Weapon_GetAmmo(*temp) >= m_pInterface->Weapon_GetAmmo(*tempInv))
+			{
 
+				m_pInterface->Inventory_RemoveItem(1U);
+				m_pInterface->Inventory_AddItem(1U, *temp);
+				m_pShotgun->pop_back();
+				if (m_pShotgun->empty())
+				{
+					m_pWorldState->SetCondition("savedShotgun", false);
+				}
+				*m_pWorldState = ApplyActionOnWorld(*m_pWorldState);
+				m_pSteering->AutoOrient = true;
+				return true;
+			}return false;
+		}
+		return true;
+	}
+	//make agent look at the target
+	m_pSteering->AngularVelocity += delta_angle;
+	m_pSteering->AngularVelocity *= m_AgentInfo.MaxAngularSpeed;
 	return false;
 }
 ///////////////////////////////////////
@@ -381,7 +511,6 @@ GOAP::Action_DestroyGarbage::Action_DestroyGarbage()
 	BaseGoapAction::SetPrecondition("savedGarbage", true);
 	BaseGoapAction::SetEffect("destroyedGarbage", true);
 	m_pSeek = new Seek();
-	m_pFace = new Face();
 }
 
 GOAP::Action_DestroyGarbage::~Action_DestroyGarbage()
@@ -402,12 +531,13 @@ bool GOAP::Action_DestroyGarbage::checkProceduralPreconditions(Elite::Blackboard
 
 bool GOAP::Action_DestroyGarbage::Execute(Elite::Blackboard* pBlackboard)
 {
-	*m_pSteering = *m_pFace->CalculateSteering(m_AgentInfo);
-	const Elite::Vector2 dir_vector = (m_pGarbage->back().Location - m_AgentInfo.Position).GetNormalized();
+	const Elite::Vector2 directionTarget{ (m_pGarbage->back().Location - m_AgentInfo.Position).GetNormalized() };
+	const Elite::Vector2 directionAgent{ cosf(m_AgentInfo.Orientation),sinf(m_AgentInfo.Orientation) };
+	const float delta_angle = Elite::AngleBetween(directionAgent, directionTarget);
 
-	const float target_angle = atan2f(dir_vector.y, dir_vector.x);
-	const float agent_angle = m_AgentInfo.Orientation;
-	const float delta_angle = target_angle - agent_angle;
+
+	m_pSteering->AutoOrient = false;
+	m_pSteering->LinearVelocity = Elite::ZeroVector2;
 
 	if (abs(delta_angle) <= 2.f)
 	{
@@ -423,6 +553,8 @@ bool GOAP::Action_DestroyGarbage::Execute(Elite::Blackboard* pBlackboard)
 		}
 		return false;
 	}
+	//make agent look at the target
+	m_pSteering->AngularVelocity += delta_angle;
 	return false;
 }
 ///////////////////////////////////////
@@ -497,7 +629,7 @@ GOAP::Action_KillShotGun::Action_KillShotGun()
 	BaseGoapAction::SetPrecondition("enemiesInRange", true);
 	BaseGoapAction::SetEffect("enemiesInRange", false);
 	BaseGoapAction::SetEffect("inDanger", false);
-	m_pFace = new Face();
+	m_pSeek = new Seek();
 }
 
 bool GOAP::Action_KillShotGun::checkProceduralPreconditions(Elite::Blackboard* pBlackboard)
@@ -506,46 +638,75 @@ bool GOAP::Action_KillShotGun::checkProceduralPreconditions(Elite::Blackboard* p
 		&& pBlackboard->GetData("pInterface", m_pInterface)
 		&& pBlackboard->GetData("AgentInfo", m_AgentInfo)
 		&& pBlackboard->GetData("WorldState", m_pWorldState)
-		&& pBlackboard->GetData("Enemies", m_Enemies);
+		&& pBlackboard->GetData("pSteering", m_pSteering)
+		&& pBlackboard->GetData("Enemies", m_Enemies)
+		&& pBlackboard->GetData("deltaTime", m_DeltaTime);
 }
 
 bool GOAP::Action_KillShotGun::Execute(Elite::Blackboard* pBlackboard)
 {
-	m_pSteering->AutoOrient = false;
-	m_pSteering->LinearVelocity = Elite::ZeroVector2;
-	if (!m_Enemies.empty())
+	if (!pBlackboard->GetData("Enemies", m_Enemies) || m_Enemies.empty()) return false;
+	if (!pBlackboard->GetData("deltaTime", m_DeltaTime) || m_Enemies.empty()) return false;
+	//if there are not more enemies in the agents sight
+	if (m_Enemies.empty())
 	{
-		const Elite::Vector2 dir_vector = (m_Enemies.back().Location - m_AgentInfo.Position).GetNormalized();
+		m_pSteering->AngularVelocity = 0.f;
+		m_pSteering->LinearVelocity = Elite::ZeroVector2;
+		*m_pWorldState = ApplyActionOnWorld(*m_pWorldState);
+		m_pWorldState->SetCondition("in_danger", false);
+		m_pSteering->AutoOrient = true;
+		return true;
+	}
 
-		const float target_angle = atan2f(dir_vector.y, dir_vector.x);
-		const float agent_angle = m_AgentInfo.Orientation;
-		const float delta_angle = target_angle - agent_angle;
+	//set variables for the steering behaviors
+	m_pSeek->setInterface(m_pInterface);
+	m_pSeek->SetTarget(m_Enemies.back().Location);
 
-		if (abs(delta_angle) <= m_AngleError)
+	//stop the autoOrient and stop moving
+	m_pSteering->AutoOrient = false;
+	//m_pSteering->LinearVelocity = Elite::ZeroVector2;
+
+
+	//update the lastShotTime (need the delta time here)
+	m_LastShotTime += m_DeltaTime;
+
+	const Elite::Vector2 directionTarget{ (m_Enemies.back().Location - m_AgentInfo.Position).GetNormalized() };
+	const Elite::Vector2 directionAgent{ cosf(m_AgentInfo.Orientation),sinf(m_AgentInfo.Orientation) };
+
+	//const float targetDirection(VectorToOrientation(directionTarget));
+	//const float agent_angle = m_AgentInfo.Orientation;
+	const float delta_angle = Elite::AngleBetween(directionAgent, directionTarget);
+
+	m_pSteering->LinearVelocity = m_pSeek->CalculateSteering(m_AgentInfo)->LinearVelocity;
+
+	// agent is looking at the target
+	if (abs(delta_angle) <= m_AngleError)
+	{
+		//m_pSteering->AutoOrient = true;
+		m_pSteering->AngularVelocity = 0.f;
+
+		if (m_LastShotTime < m_ShootingDelay) return false;
+		//m_pWorldState->SetCondition("in_danger", false);
+
+		m_LastShotTime = 0.f;
+
+		ItemInfo* weapon{ new ItemInfo() };
+
+		if (m_pInterface->Inventory_GetItem(1U, *weapon) &&
+			m_pInterface->Weapon_GetAmmo(*weapon) <= 0
+			)
 		{
-			m_pSteering->AngularVelocity = 0.f;
-			ItemInfo* temp{};
-			m_pInterface->Inventory_GetItem(1U, *temp);
-			if (m_pInterface->Weapon_GetAmmo(*temp) <= 0)
-			{
-				m_pInterface->Inventory_RemoveItem(1U);
-				return false;
-			}
-			m_pInterface->Inventory_UseItem(1U);
-			std::cout << "Enemy health: " << m_Enemies.back().Health << std::endl;
-			if (m_Enemies.back().Health <= 1.f)
-			{
-				*m_pWorldState = ApplyActionOnWorld(*m_pWorldState);
-				return true;
-			}
+			m_pInterface->Inventory_RemoveItem(1U);
+			m_pWorldState->SetCondition("shotgunInInv", false);
+			return true;
 		}
-		m_pSteering->AngularVelocity = m_AgentInfo.MaxAngularSpeed;
-		if (delta_angle < 0 || delta_angle > static_cast<float>(M_PI))
-		{
-			m_pSteering->AngularVelocity = -m_AgentInfo.MaxAngularSpeed;
-		}
+		if (m_pInterface->Inventory_UseItem(1U)) return false;
 		return false;
-	}return true;
+	}
+
+	//make agent look at the target
+	m_pSteering->AngularVelocity += delta_angle;
+	return false;
 }
 ///////////////////////////////////////
 //KILL WITH PISTOL
@@ -559,7 +720,7 @@ GOAP::Action_KillPistol::Action_KillPistol()
 	BaseGoapAction::SetPrecondition("inDanger", true);
 	BaseGoapAction::SetEffect("enemiesInRange", false);
 	BaseGoapAction::SetEffect("inDanger", false);
-	m_pFace = new Face();
+	m_pSeek = new Seek();
 }
 
 bool GOAP::Action_KillPistol::checkProceduralPreconditions(Elite::Blackboard* pBlackboard)
@@ -568,49 +729,71 @@ bool GOAP::Action_KillPistol::checkProceduralPreconditions(Elite::Blackboard* pB
 		&& pBlackboard->GetData("pInterface", m_pInterface)
 		&& pBlackboard->GetData("AgentInfo", m_AgentInfo)
 		&& pBlackboard->GetData("WorldState", m_pWorldState)
-		&& pBlackboard->GetData("Enemies", m_Enemies);
+		&& pBlackboard->GetData("pSteering", m_pSteering)
+		&& pBlackboard->GetData("Enemies", m_Enemies)
+		&& pBlackboard->GetData("deltaTime", m_DeltaTime);
 }
 
 bool GOAP::Action_KillPistol::Execute(Elite::Blackboard* pBlackboard)
 {
-	m_pSteering->AutoOrient = false;
-	m_pSteering->LinearVelocity = Elite::ZeroVector2;
-
-	if (!m_Enemies.empty())
+	if (!pBlackboard->GetData("Enemies", m_Enemies) || m_Enemies.empty()) return false;
+	if (!pBlackboard->GetData("deltaTime", m_DeltaTime) || m_Enemies.empty()) return false;
+	//if there are not more enemies in the agents sight
+	if (m_Enemies.empty())
 	{
+		m_pSteering->AngularVelocity = 0.f;
+		m_pSteering->LinearVelocity = Elite::ZeroVector2;
+		*m_pWorldState = ApplyActionOnWorld(*m_pWorldState);
+		m_pWorldState->SetCondition("in_danger", false);
+		m_pSteering->AutoOrient = true;
+		return true;
+	}
 
-		const Elite::Vector2 dir_vector = (m_Enemies.back().Location - m_AgentInfo.Position).GetNormalized();
+	//set variables for the steering behaviors
+	m_pSeek->setInterface(m_pInterface);
+	m_pSeek->SetTarget(m_Enemies.back().Location);
 
-		const float target_angle = atan2f(dir_vector.y, dir_vector.x);
-		const float agent_angle = m_AgentInfo.Orientation;
-		const float delta_angle = target_angle - agent_angle;
+	//stop the autoOrient and stop moving
+	m_pSteering->AutoOrient = false;
+	//m_pSteering->LinearVelocity = Elite::ZeroVector2;
 
-		if (abs(delta_angle) <= m_AngleError)
+
+	//update the lastShotTime (need the delta time here)
+	m_LastShotTime += m_DeltaTime;
+
+	const Elite::Vector2 directionTarget{ (m_Enemies.back().Location - m_AgentInfo.Position).GetNormalized() };
+	const Elite::Vector2 directionAgent{ cosf(m_AgentInfo.Orientation),sinf(m_AgentInfo.Orientation) };
+	const float delta_angle = Elite::AngleBetween(directionAgent, directionTarget);
+
+	m_pSteering->LinearVelocity = m_pSeek->CalculateSteering(m_AgentInfo)->LinearVelocity;
+
+	// agent is looking at the target
+	if (abs(delta_angle) <= m_AngleError)
+	{
+		//m_pSteering->AutoOrient = true;
+		m_pSteering->AngularVelocity = 0.f;
+
+		if (m_LastShotTime < m_ShootingDelay) return false;
+		//m_pWorldState->SetCondition("in_danger", false);
+
+		m_LastShotTime = 0.f;
+
+		ItemInfo* weapon{ new ItemInfo() };
+		if (m_pInterface->Inventory_UseItem(0U) &&
+			m_pInterface->Inventory_GetItem(0U, *weapon) &&
+			m_pInterface->Weapon_GetAmmo(*weapon) <= 0
+			)
 		{
-			m_pSteering->AngularVelocity = 0.f;
-			ItemInfo* temp{};
-			m_pInterface->Inventory_GetItem(0U, *temp);
-			if (m_pInterface->Weapon_GetAmmo(*temp) <= 0)
-			{
-				m_pInterface->Inventory_RemoveItem(0U);
-				return false;
-			}
-			m_pInterface->Inventory_UseItem(0U);
-			std::cout << "Enemy health: " << m_Enemies.back().Health << std::endl;
-			if (m_Enemies.back().Health <= 1.f)
-			{
-				*m_pWorldState = ApplyActionOnWorld(*m_pWorldState);
-				return true;
-			}
-		}
-		m_pSteering->AngularVelocity = m_AgentInfo.MaxAngularSpeed;
-		if (delta_angle < 0 || delta_angle > static_cast<float>(M_PI))
-		{
-			m_pSteering->AngularVelocity = -m_AgentInfo.MaxAngularSpeed;
+			m_pInterface->Inventory_RemoveItem(0U);
+			m_pWorldState->SetCondition("pistolInInv", false);
+			return true;
 		}
 		return false;
 	}
-	return true;
+
+	//make agent look at the target
+	m_pSteering->AngularVelocity += delta_angle;
+	return false;
 }
 ///////////////////////////////////////
 //FLEE A PURGEZONE
@@ -621,22 +804,25 @@ GOAP::Action_FleePurgezone::Action_FleePurgezone()
 {
 	BaseGoapAction::SetPrecondition("insidePurgezone", true);
 	BaseGoapAction::SetEffect("insidePurgezone", false);
-	m_pFlee = new Flee();
+	m_pSeek = new Seek();
 }
 
 bool GOAP::Action_FleePurgezone::checkProceduralPreconditions(Elite::Blackboard* pBlackboard)
 {
 	return BaseGoapAction::checkProceduralPreconditions(pBlackboard)
-		&& pBlackboard->GetData("Interface", m_pInterface)
+		&& pBlackboard->GetData("pInterface", m_pInterface)
 		&& pBlackboard->GetData("Target", m_Target)
 		&& pBlackboard->GetData("AgentInfo", m_AgentInfo)
-		&& pBlackboard->GetData("Steering", m_pSteering)
+		&& pBlackboard->GetData("pSteering", m_pSteering)
 		&& pBlackboard->GetData("WorldState", m_pWorldState);
 }
 
 bool GOAP::Action_FleePurgezone::Execute(Elite::Blackboard* pBlackboard)
 {
-	if (m_AgentInfo.Position.DistanceSquared(m_Target) <= (m_AgentInfo.GrabRange))
+	m_pSeek->setInterface(m_pInterface);
+	m_pSeek->SetTarget(m_Target);
+
+	if (m_AgentInfo.Position.DistanceSquared(m_Target) <= (m_AgentInfo.GrabRange / 2))
 	{
 		m_pSteering->LinearVelocity = Elite::ZeroVector2;
 		m_pSteering->RunMode = false;
@@ -644,12 +830,12 @@ bool GOAP::Action_FleePurgezone::Execute(Elite::Blackboard* pBlackboard)
 		return true;
 	}
 
+	*m_pSteering = *m_pSeek->CalculateSteering(m_AgentInfo);
 	m_pSteering->AutoOrient = true;
-	*m_pSteering = *m_pFlee->CalculateSteering(m_AgentInfo);
 	m_pSteering->LinearVelocity *= m_AgentInfo.MaxLinearSpeed;
 
 
-	if (m_AgentInfo.Stamina > 4.f)
+	if (m_AgentInfo.Stamina > 0.5f)
 		m_pSteering->RunMode = true;
 	else if (m_AgentInfo.Stamina == 0.f)
 		m_pSteering->RunMode = false;

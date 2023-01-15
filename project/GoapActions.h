@@ -24,11 +24,11 @@ namespace GOAP
 	///////////////////////////////////////
 	//LootHouse
 	//****
-	class Action_LootHouse final : public BaseGoapAction
+	class Action_MoveTo final : public BaseGoapAction
 	{
 	public:
-		Action_LootHouse();
-		~Action_LootHouse() override;
+		Action_MoveTo();
+		~Action_MoveTo() override;
 		bool checkProceduralPreconditions(Elite::Blackboard* pBlackboard) override;
 		bool Execute(Elite::Blackboard* pBlackboard) override;
 
@@ -36,6 +36,8 @@ namespace GOAP
 		SteeringPlugin_Output* m_pSteering;
 		Seek* m_pSeek = {};
 		HouseInfoExtended* m_TargetHouse;
+		float m_DeltaTime;
+		float m_ArrivedStartSpinTimer;
 	};
 	///////////////////////////////////////
 	//GRAB FOOD
@@ -52,8 +54,8 @@ namespace GOAP
 		EntityInfoExtended m_TargetItem;
 		std::vector<EntityInfoExtended>* m_pFood{};
 		SteeringPlugin_Output* m_pSteering;
+		float m_ErrorAngle{ 0.05f };
 		Seek* m_pSeek = {};
-		Face* m_pFace = {};
 	};
 	///////////////////////////////////////
 	//GRAB MEDKIT
@@ -70,8 +72,8 @@ namespace GOAP
 		EntityInfoExtended m_TargetItem;
 		std::vector<EntityInfoExtended>* m_pMedkits{};
 		SteeringPlugin_Output* m_pSteering;
+		float m_ErrorAngle{ 0.05f };
 		Seek* m_pSeek = {};
-		Face* m_pFace = {};
 	};
 	///////////////////////////////////////
 	//GRAB PISTOL
@@ -88,8 +90,8 @@ namespace GOAP
 		EntityInfoExtended m_TargetItem;
 		std::vector<EntityInfoExtended>* m_pPistol{};
 		SteeringPlugin_Output* m_pSteering;
+		float m_ErrorAngle{ 0.05f };
 		Seek* m_pSeek = {};
-		Face* m_pFace = {};
 	};
 	///////////////////////////////////////
 	//GRAB SHOTGUN
@@ -106,8 +108,8 @@ namespace GOAP
 		EntityInfoExtended m_TargetItem;
 		std::vector<EntityInfoExtended>* m_pShotgun{};
 		SteeringPlugin_Output* m_pSteering;
+		float m_ErrorAngle{ 0.01f };
 		Seek* m_pSeek = {};
-		Face* m_pFace = {};
 	};
 	///////////////////////////////////////
 	//DESTROY GARBAGE
@@ -123,8 +125,8 @@ namespace GOAP
 	private:
 		std::vector<EntityInfoExtended>* m_pGarbage{};
 		SteeringPlugin_Output* m_pSteering;
+		float m_ErrorAngle{ 0.01f };
 		Seek* m_pSeek = {};
-		Face* m_pFace = {};
 	};
 	///////////////////////////////////////
 	//CONSUME MEDKIT
@@ -149,7 +151,7 @@ namespace GOAP
 		bool Execute(Elite::Blackboard* pBlackboard) override;
 	};
 	///////////////////////////////////////
-//CONSUME FOOD
+//kILL SHOTGUN
 //****
 	class Action_KillShotGun final : public BaseGoapAction
 	{
@@ -161,11 +163,14 @@ namespace GOAP
 	private:
 		SteeringPlugin_Output* m_pSteering;
 		std::vector<EnemyInfo> m_Enemies;
-		const float m_AngleError{ 1.f };
-		Face* m_pFace;
+		const float m_AngleError{ 0.05f };
+		const float m_ShootingDelay{ 0.05f };
+		float m_LastShotTime{ 0.0f };
+		float m_DeltaTime;
+		Seek* m_pSeek;
 	};
 	///////////////////////////////////////
-//CONSUME FOOD
+//KILL PISTOL
 //****
 	class Action_KillPistol final : public BaseGoapAction
 	{
@@ -177,11 +182,14 @@ namespace GOAP
 	private:
 		SteeringPlugin_Output* m_pSteering;
 		std::vector<EnemyInfo> m_Enemies;
-		const float m_AngleError{ 1.f };
-		Face* m_pFace;
+		const float m_AngleError{ 0.05f };
+		const float m_ShootingDelay{ 0.05f };
+		float m_LastShotTime{ 0.0f };
+		float m_DeltaTime;
+		Seek* m_pSeek;
 	};
 	///////////////////////////////////////
-//CONSUME FOOD
+//FLEE PRUGEZONE
 //****
 	class Action_FleePurgezone final : public BaseGoapAction
 	{
@@ -192,6 +200,6 @@ namespace GOAP
 		bool Execute(Elite::Blackboard* pBlackboard) override;
 	private:
 		SteeringPlugin_Output* m_pSteering;
-		Flee* m_pFlee;
+		Seek* m_pSeek;
 	};
 }

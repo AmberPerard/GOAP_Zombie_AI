@@ -117,7 +117,7 @@ public:
 struct Goal_DestroyGarbage final : WorldState
 {
 public:
-	Goal_DestroyGarbage() : WorldState("destroyGarbage", 60)
+	Goal_DestroyGarbage() : WorldState("destroyGarbage", 120)
 	{
 		SetCondition("destroyedGarbage", true);
 	}

@@ -15,8 +15,6 @@ SteeringPlugin_Output* Seek::CalculateSteering( AgentInfo pAgent)
 	pSteering->LinearVelocity = (m_pInterface->NavMesh_GetClosestPathPoint(m_Target.Position) - pAgent.Position).GetNormalized();
 	pSteering->LinearVelocity *= pAgent.MaxLinearSpeed;
 
-	m_pInterface->Draw_Point(m_pInterface->NavMesh_GetClosestPathPoint(m_Target.Position),2,{1,0,0});
-
 	return pSteering;
 }
 
@@ -25,7 +23,7 @@ SteeringPlugin_Output* Flee::CalculateSteering( AgentInfo pAgent)
 	SteeringPlugin_Output* pSteering{ new SteeringPlugin_Output() };
 	const Vector2 toTarget = pAgent.Position - m_Target.Position;
 
-	pSteering->LinearVelocity = (m_pInterface->NavMesh_GetClosestPathPoint(pAgent.Position) - m_Target.Position).GetNormalized();
+	pSteering->LinearVelocity = (m_pInterface->NavMesh_GetClosestPathPoint(toTarget)).GetNormalized();
 	pSteering->LinearVelocity *= pAgent.MaxLinearSpeed;
 
 	return pSteering;
@@ -60,34 +58,27 @@ SteeringPlugin_Output* Arrive::CalculateSteering( AgentInfo pAgent)
 SteeringPlugin_Output* Face::CalculateSteering( AgentInfo pAgent)
 {
 	SteeringPlugin_Output* pSteering{ new SteeringPlugin_Output() };
-
-	// Get the rotation of the target point based on unit circle.
-	const float targetRotation = atan2f(
-		m_Target.Position.y - pAgent.Position.y,
-		m_Target.Position.x - pAgent.Position.x
-	);
+	pSteering->AutoOrient = false;
 
 	// Vector target to agent
-	const Vector2 targetAgent{ m_Target.Position - pAgent.Position };
+	const Vector2 directionVector{ m_Target.Position - pAgent.Position };
+	const float desiredRotation{ VectorToOrientation(directionVector) };
 
 	// Forward vector agent
-	const Vector2 pAgentForward{
-		cosf(pAgent.Orientation),
-		sinf(pAgent.Orientation)
+	const float orientAgent{pAgent.Orientation
 	};
 
-	// Determine what side to rotate through cross product
-	const float direction = Cross(pAgentForward, targetAgent);
+	float orientationDifference{ desiredRotation - orientAgent };
 
 	// Stop rotating if within error margin
-	if (std::abs(pAgent.Orientation - targetRotation) < 0.2f)
+	if (std::abs(orientationDifference) < 0.2f)
 	{
 		pSteering->AngularVelocity = 0.f;
 	}
 	else
 	{
 		// Steer correct side
-		pSteering->AngularVelocity = Clamp(direction, -1.f, 1.f) * pAgent.MaxLinearSpeed;
+		pSteering->AngularVelocity = orientationDifference * pAgent.MaxLinearSpeed;
 	}
 
 	return pSteering;
