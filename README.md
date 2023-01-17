@@ -39,3 +39,77 @@ GOAP makes the diagrams way less complex, the one I made for my AI looks somethi
 —insert image—
 
 In summary, GOAP is a planning-based approach that allows for more complex and dynamic behavior, while FSMs and Behaviour Trees are based on predefined states and transitions, which makes them simpler and more efficient, but less flexible.
+
+## Creation of my GOAP AI
+
+### Actions
+
+most fundamental thing for a decision making structure are the actions that are defined for the AI to execute. A GOAP give the AI a set of **Preconditions** of the world and a set of ****************Effects**************** that it will affect the state of the world. 
+
+The example below shows the a medkit consuming action. For this action to be able to execute there are 2 preconditions. The AI needs to have a medkit in its inventory and the AI needs to have lost some health.
+
+```cpp
+GOAP::Action_ConsumeMedKit::Action_ConsumeMedKit()
+	:BaseGoapAction("ConsumeMedKit", 2)
+{
+	BaseGoapAction::SetPrecondition("medkitInInv", true);
+	BaseGoapAction::SetPrecondition("LowHealth", true);
+	BaseGoapAction::SetEffect("LowHealth", false);
+	BaseGoapAction::SetEffect("medkitInInv", false);
+}
+```
+
+After the action is executed the effects on the world state will be that the AI doesn’t have a medkit anymore and it will not longer be low health. 
+
+I have create a base action that all actions can inherit from. This will give the action a name and a set cost. This cost will become useful in the planner. 
+
+### World State
+
+The world states represents how the AI perceives the world. It is a set of Booleans that indicate certain conditions in the world. These what gives the preconditions to the actions.
+
+```cpp
+("insidePurgezone", false);
+("inDanger", false);
+("LowHealth", false);
+("LowFood", false);
+
+("enemiesInRange", false);
+("houseInRange", false);
+("targetInRange", false);
+
+("pistolInInv", false);
+("foodInInv", false);
+("shotgunInInv", false);
+("medkitInInv", false);
+```
+
+### Goals
+
+With the world state Booleans initialized, we can set certain goals for the desired world that we want the AI to be in. 
+
+In the example down below you can see that we have a goal to shoot the enemies if the AI is in danger. It also has a priority number with it. 
+
+```cpp
+struct Goal_ShootEnemies final : WorldState
+{
+public:
+	Goal_ShootEnemies() : WorldState("ShootEnemies", 400)
+	{
+		SetCondition("inDanger", false);
+	}
+}
+```
+
+in contrary to the looting house goal the priority for shooting enemies is way higher.
+
+```cpp
+Goal_LootHouse() : WorldState("LootHouse", 100)
+```
+
+This is important for our AI so that the planner can make the right decisions on what is the most important at that current moment. 
+
+### Planner
+
+The planner is what makes the AI so flexible, It is the brain that puts together the path of actions that it will take for the highest available priority goal. The Planning algorithm I use for the Planner is A*. This Algorithm is well know for finding the shortest path on a nav mesh, but it can generally be use to find a shortest path if you have cost in your nodes. 
+
+—continue later—
