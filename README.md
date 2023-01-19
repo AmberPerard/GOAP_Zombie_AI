@@ -4,6 +4,8 @@ We had the interesting task of choosing a research topic for a course in DAE. We
 
 My implementation is on a 2D zombie survival game written by the DAE teachers. The project itself is written in c++.
 
+![](https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/ShowGif.gif)
+
 ### Short conclusion
 
 I loved working with GOAP, it seems very handy to make a bigger behavior system that can make decision on the fly to have the perfect plan for the moment. 
@@ -34,19 +36,19 @@ Behaviour Trees is also based on a set of predefined action but in a more tree-l
 
 A complex FSM can look like this:
 
-![[https://hillside.net/plop/plop2003/Papers/Adamczyk-State-Machine.pdf](https://hillside.net/plop/plop2003/Papers/Adamczyk-State-Machine.pdf)](GoapReadme%207bc6a388da1643aa87ba79b0dbb6289b/Untitled.png)
+![](https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/FiniteStateMachine.png)
 
 [https://hillside.net/plop/plop2003/Papers/Adamczyk-State-Machine.pdf](https://hillside.net/plop/plop2003/Papers/Adamczyk-State-Machine.pdf)
 
 A complex behavior tree can look like this: 
 
-![[https://en.wikipedia.org/wiki/Behavior_tree](https://en.wikipedia.org/wiki/Behavior_tree)](GoapReadme%207bc6a388da1643aa87ba79b0dbb6289b/Untitled%201.png)
+![](https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/BehaviorTree.png)
 
 [https://en.wikipedia.org/wiki/Behavior_tree](https://en.wikipedia.org/wiki/Behavior_tree)
 
 GOAP makes the diagrams way less complex, the one I made for my AI looks something like this
 
-—insert image—
+![](https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/GOAP%20Actions.png)
 
 In summary, GOAP is a planning-based approach that allows for more complex and dynamic behavior, while FSMs and Behaviour Trees are based on predefined states and transitions, which makes them simpler and more efficient, but less flexible. 
 
@@ -56,7 +58,7 @@ A GOAP exist out of a few key elements, you need to predefine some Actions, a Wo
 
 ### Actions
 
-most fundamental thing for a decision making structure are the actions that are defined for the AI to execute. A GOAP give the AI a set of **Preconditions** of the world and a set of ****************Effects**************** that it will affect the state of the world. 
+most fundamental thing for a decision making structure are the actions that are defined for the AI to execute. A GOAP give the AI a set of **Preconditions** of the world and a set of **Effects** that it will affect the state of the world. 
 
 The example below shows the a medkit consuming action. For this action to be able to execute there are 2 preconditions. The AI needs to have a medkit in its inventory and the AI needs to have lost some health.
 
@@ -130,9 +132,13 @@ The planner is what makes the AI so flexible, It is the brain that puts together
 
 While the planner and the world state are very good, there are still some improvements to make in the actions. 
 
-There would be a better action do sweep the houses and make sure that they are fully discovered. Now I have a 2 points in the house on the Y axis. This could be swapped out with a 4 point sweep. \
+There would be a better action do sweep the houses and make sure that they are fully discovered. Now I have a 2 points in the house on the Y axis. This could be swapped out with a 4 point sweep.
+
+![](https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/SweepingHouse.gif)
 
 Also the wanderer is now a random point in a range of 100.f and that decides where the AI goes to explore, this could be a better by a pattern or spatial partitioning or other ways to improve the map awareness. 
+
+![](https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/RandomWander.gif)
 
 ## Conclusion
 
