@@ -1,6 +1,6 @@
-# Zombie Ai with GOAP
+# Zombie AI with GOAP
 
-We had the interesting task of choosing a research topic for a course in DAE. We had a AI related topic. I choose GOAP or Goal Oriented Action Planning. This is an implementation of Jeff Orkin AI architecture. He used it for F.E.A.R.
+We had the interesting task of choosing a research topic for a course in DAE. We had to do a AI related topic. I chose GOAP or Goal Oriented Action Planning. This is an implementation of Jeff Orkin AI architecture. He used it for F.E.A.R.
 
 My implementation is on a 2D zombie survival game written by the DAE teachers. The project itself is written in c++.
 
@@ -12,9 +12,9 @@ My implementation is on a 2D zombie survival game written by the DAE teachers. T
 
 ### Short conclusion
 
-I loved working with GOAP, it seems very handy to make a bigger behavior system that can make decision on the fly to have the perfect plan for the moment. 
+I loved working with GOAP, it seems very handy to make a bigger behavior system that can make decisions on the fly to have the perfect plan for the moment. 
 
-I will definitely remember this method. If I find any free time will try to continue to develop this project.
+I will definitely remember this method. If I find any free time, I will try to continue to develop this project.
 
 ## What is GOAP?
 
@@ -22,7 +22,7 @@ I will definitely remember this method. If I find any free time will try to cont
 
 Goal Oriented Action Planning is a type of AI that uses a goal and executes actions based on a virtual state of the environment it is in. It is commonly used to allow AI to make decisions and take actions based on their goals and the available resources to them. 
 
-GOAP works by defining a set of goals for the AI, as well as actions that the Ai can take. The Ai then then uses a planning algorithm to determine the most efficient sequence of actions to achieve its goals, taking into account the current state of the environment and the resources available to it.
+GOAP works by defining a set of goals for the AI, as well as actions that the AI can take. The AI then then uses a planning algorithm to determine the most efficient sequence of actions to achieve its goals, taking into account the current state of the environment and the resources available to it.
 
 For example, if an AI has no food in its inventory anymore, the sequence of actions can look something like this: “look for food”, “pick up the food” , “Eat the food. With the planning algorithm it also determines the best sequence of these actions to achieve the goal, taking into account the environmental conditions.  These can be the location of the food, distance and for instance energy of the AI.
 
@@ -32,11 +32,11 @@ GOAP can be useful in a variety of applications, including video games, simulati
 
 ---
 
-Other well known decision making structures are Finite State Machine (FSM) or Behavior Trees (BT). 
+Other well known decision making structures are Finite State Machine (FSM) or Behavior Tree (BT). 
 
 FSM is based on a set of predefined states and transitions between those states. NPCs are in one state at a time and can only transition to other states based on specific conditions. This approach is simpler and more efficient, but can be less flexible and less capable of handling complex or dynamic behaviors.
 
-Behaviour Trees is also based on a set of predefined action but in a more tree-like structure. Behaviour Tree allows for complex decision making by combining simple decisions in a tree-like structure. They are more flexible than FSM but still can become very chaotic and hard to manage at a certain point. 
+Behaviour Trees is also based on a set of predefined actions but in a more tree-like structure. Behaviour Tree allows for complex decision making by combining simple decisions in a tree-like structure. They are more flexible than FSM but still can become very chaotic and hard to manage at a certain point. 
 
 A complex FSM can look like this:
 
@@ -68,11 +68,11 @@ In summary, GOAP is a planning-based approach that allows for more complex and d
 
 ## Creation of my GOAP AI
 
-A GOAP exist out of a few key elements, you need to predefine some Actions, a World State, some predefined Goals and the Planner to put all of the elements together. I will go over every of these elements one by one.
+A GOAP exists out of a few key elements. You need to predefine some Actions, a World State, some predefined Goals and the Planner to put all of the elements together. I will go over every of these elements one by one.
 
 ### Actions
 
-most fundamental thing for a decision making structure are the actions that are defined for the AI to execute. A GOAP give the AI a set of **Preconditions** of the world and a set of **Effects** that it will affect the state of the world. 
+The most fundamental thing for a decision making structure are the actions that are defined for the AI to execute. A GOAP gives the AI a set of **Preconditions** of the world and a set of **Effects** that it will affect the state of the world. 
 
 The example below shows the a medkit consuming action. For this action to be able to execute there are 2 preconditions. The AI needs to have a medkit in its inventory and the AI needs to have lost some health.
 
@@ -89,11 +89,11 @@ GOAP::Action_ConsumeMedKit::Action_ConsumeMedKit()
 
 After the action is executed the effects on the world state will be that the AI doesn’t have a medkit anymore and it will not longer be low health. 
 
-I have create a base action that all actions can inherit from. This will give the action a name and a set cost. This cost will become useful in the planner. 
+I have created a base action that all actions can inherit from. This will give the action a name and a set cost. This cost will become useful in the planner. 
 
 ### World State
 
-The world states represents how the AI perceives the world. It is a set of Booleans that indicate certain conditions in the world. These what gives the preconditions to the actions. 
+The world states represents how the AI perceives the world. It is a set of Booleans that indicate certain conditions in the world. These give the preconditions to the actions. 
 
 These are some of the states I have used to define the world state for the AI. 
 
