@@ -4,7 +4,11 @@ We had the interesting task of choosing a research topic for a course in DAE. We
 
 My implementation is on a 2D zombie survival game written by the DAE teachers. The project itself is written in c++.
 
-![](https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/ShowGif.gif)
+<div align="center">
+  <p align="center">
+  ![](https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/ShowGif.gif)
+  </p>
+</div>
 
 ### Short conclusion
 
@@ -36,19 +40,29 @@ Behaviour Trees is also based on a set of predefined action but in a more tree-l
 
 A complex FSM can look like this:
 
+<div align="center">
+  <p align="center">
 ![](https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/FiniteStateMachine.png)
-
 [https://hillside.net/plop/plop2003/Papers/Adamczyk-State-Machine.pdf](https://hillside.net/plop/plop2003/Papers/Adamczyk-State-Machine.pdf)
+  </p>
+</div>
 
 A complex behavior tree can look like this: 
 
+<div align="center">
+  <p align="center">
 ![](https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/BehaviorTree.png)
-
 [https://en.wikipedia.org/wiki/Behavior_tree](https://en.wikipedia.org/wiki/Behavior_tree)
+  </p>
+</div>
 
 GOAP makes the diagrams way less complex, the one I made for my AI looks something like this
 
+<div align="center">
+  <p align="center">
 ![](https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/GOAP%20Actions.png)
+  </p>
+</div>
 
 In summary, GOAP is a planning-based approach that allows for more complex and dynamic behavior, while FSMs and Behaviour Trees are based on predefined states and transitions, which makes them simpler and more efficient, but less flexible. 
 
@@ -134,11 +148,19 @@ While the planner and the world state are very good, there are still some improv
 
 There would be a better action do sweep the houses and make sure that they are fully discovered. Now I have a 2 points in the house on the Y axis. This could be swapped out with a 4 point sweep.
 
+<div align="center">
+  <p align="center">
 ![](https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/SweepingHouse.gif)
+  </p>
+</div>
 
 Also the wanderer is now a random point in a range of 100.f and that decides where the AI goes to explore, this could be a better by a pattern or spatial partitioning or other ways to improve the map awareness. 
 
+<div align="center">
+  <p align="center">
 ![](https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/RandomWander.gif)
+  </p>
+</div>
 
 ## Conclusion
 
