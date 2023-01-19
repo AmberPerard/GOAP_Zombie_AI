@@ -167,3 +167,17 @@ Also the wanderer is now a random point in a range of 100.f and that decides whe
 This project was a bit out of my comfort zone, but it was one of the most fun projects to work on. I am always eager to learn and definitely on AI. GOAP was a very fun experience and very interesting. I think I will use GOAP for further projects. 
 
 I found it very good to use, cause you don't have to make any condition. The planner can just create the right path for the right situation.
+
+# Sources
+
+Jeff Orkin’s GOAP website: [https://alumni.media.mit.edu/~jorkin/goap.html](https://alumni.media.mit.edu/~jorkin/goap.html)
+
+A video going over the F.E.A.R. GOAP: [https://www.youtube.com/watch?v=PaOLBOuyswI&t=613s](https://www.youtube.com/watch?v=PaOLBOuyswI&t=613s)
+
+Jared Mitchel’s GOAP research: [https://jaredemitchell.com/goal-oriented-action-planning-research/](https://jaredemitchell.com/goal-oriented-action-planning-research/)
+
+GDC talk on GOAP: [https://www.youtube.com/watch?v=gm7K68663rA](https://www.youtube.com/watch?v=gm7K68663rA)
+
+CPP implementation I based my implementation on: [https://github.com/cpowell/cppGOAP](https://github.com/cpowell/cppGOAP) 
+
+Medium article that explained it: [https://medium.com/@vedantchaudhari/goal-oriented-action-planning-34035ed40d0b](https://medium.com/@vedantchaudhari/goal-oriented-action-planning-34035ed40d0b)
