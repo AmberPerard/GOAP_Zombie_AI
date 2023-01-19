@@ -52,7 +52,7 @@ A complex behavior tree can look like this:
 <div align="center">
   <p align="center">
 <img src=https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/BehaviorTree.png>
-[https://en.wikipedia.org/wiki/Behavior_tree](https://en.wikipedia.org/wiki/Behavior_tree)
+[https://en.wikipedia.org/wiki/Behavior_tree]
   </p>
 </div>
 
