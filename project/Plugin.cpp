@@ -76,16 +76,18 @@ void Plugin::Update(float dt)
 //This function calculates the new SteeringOutput, called once per frame
 SteeringPlugin_Output Plugin::UpdateSteering(float dt)
 {
+	m_TotalElapsedTime += dt;
 	GetEntitiesInFOV();
 	//Get houses in FOV
 	updateHousesInMemory();
 
 	GetNewHousesInFOV(dt);
 	CheckIfInisdePurgeZone();
-	m_EnemiesInFOV = GetEnemiesInFOV();
+	GetEnemiesInFOV();
 	m_DeltaTime = dt;
 
 	auto agentInfo = m_pInterface->Agent_GetInfo();
+
 	m_pBlackboard->ChangeData("Target", m_Target);
 	m_pBlackboard->ChangeData("AgentInfo", agentInfo);
 	m_pBlackboard->ChangeData("Enemies", m_EnemiesInFOV);
@@ -112,25 +114,12 @@ void Plugin::Render(float dt) const
 {
 	//This Render function should only contain calls to Interface->Draw_... functions
 	m_pInterface->Draw_SolidCircle(m_Target, .7f, { 0,0 }, { 1, 0, 0 });
-}
 
-vector<HouseInfo> Plugin::GetHousesInFOV() const
-{
-	vector<HouseInfo> vHousesInFOV = {};
+	auto sizeWorld = m_pInterface->World_GetInfo().Dimensions;
+	sizeWorld.y *= 0.35f;
+	sizeWorld.x *= 0.35f;
 
-	HouseInfo hi = {};
-	for (int i = 0;; ++i)
-	{
-		if (m_pInterface->Fov_GetHouseByIndex(i, hi))
-		{
-			vHousesInFOV.push_back(hi);
-			continue;
-		}
-
-		break;
-	}
-
-	return vHousesInFOV;
+	m_pInterface->Draw_Circle(m_pInterface->World_GetInfo().Center, sizeWorld.y, { 0,0,0 }, 0.5f);
 }
 
 void Plugin::GetEntitiesInFOV()
@@ -156,27 +145,27 @@ void Plugin::GetEntitiesInFOV()
 				case eItemType::PISTOL:
 					m_pMemoryPistol->emplace_back(entityInfo);
 					m_WorldState.SetCondition("savedPistol", true);
-					SortEntitiesByDistance(m_pMemoryPistol);
+					SortByDistance(m_pMemoryPistol);
 					break;
 				case eItemType::SHOTGUN:
 					m_pMemoryShotGuns->emplace_back(entityInfo);
 					m_WorldState.SetCondition("savedShotgun", true);
-					SortEntitiesByDistance(m_pMemoryShotGuns);
+					SortByDistance(m_pMemoryShotGuns);
 					break;
 				case eItemType::MEDKIT:
 					m_pMemoryMedKits->emplace_back(entityInfo);
 					m_WorldState.SetCondition("savedMedkit", true);
-					SortEntitiesByDistance(m_pMemoryMedKits);
+					SortByDistance(m_pMemoryMedKits);
 					break;
 				case eItemType::FOOD:
 					m_pMemoryFood->emplace_back(entityInfo);
 					m_WorldState.SetCondition("savedFood", true);
-					SortEntitiesByDistance(m_pMemoryFood);
+					SortByDistance(m_pMemoryFood);
 					break;
 				case eItemType::GARBAGE:
 					m_pMemoryGarbage->emplace_back(entityInfo);
 					m_WorldState.SetCondition("savedGarbage", true);
-					SortEntitiesByDistance(m_pMemoryGarbage);
+					SortByDistance(m_pMemoryGarbage);
 					break;
 				default:
 					continue;
@@ -231,7 +220,7 @@ void Plugin::GetEntitiesInFOV()
 	}
 }
 
-std::vector<EnemyInfo> Plugin::GetEnemiesInFOV()
+void Plugin::GetEnemiesInFOV()
 {
 	std::vector<EnemyInfo> enemiesInFOV;
 
@@ -251,39 +240,34 @@ std::vector<EnemyInfo> Plugin::GetEnemiesInFOV()
 		break;
 	}
 
-	SortEntitiesByDistance(&enemiesInFOV);
-	return enemiesInFOV;
+	SortByDistance(&enemiesInFOV);
+	m_EnemiesInFOV = enemiesInFOV;
 }
 
 bool Plugin::CheckIfInisdePurgeZone()
 {
-	EntityInfo entityInfo{};
-	Elite::Vector2 combinedDirection{ Elite::ZeroVector2 };
+	EntityInfo ei{};
+	m_WorldState.SetCondition("insidePurgezone", false);
 	for (int i = 0;; ++i)
 	{
-		if (m_pInterface->Fov_GetEntityByIndex(i, entityInfo))
+		if (m_pInterface->Fov_GetEntityByIndex(i, ei))
 		{
-			if (entityInfo.Type == eEntityType::PURGEZONE)
+			if (ei.Type == eEntityType::PURGEZONE)
 			{
-				m_pInterface->PurgeZone_GetInfo(entityInfo, m_PurgeZoneInFov);
-				Elite::Vector2 directionVector = m_pInterface->Agent_GetInfo().Position - m_PurgeZoneInFov.Center;
-				if (directionVector.MagnitudeSquared() <= (m_PurgeZoneInFov.Radius+5) * (m_PurgeZoneInFov.Radius + 5))
+				m_pInterface->PurgeZone_GetInfo(ei, m_PurgeZoneInFov);
+				const Elite::Vector2 dir_vector = m_pInterface->Agent_GetInfo().Position - m_PurgeZoneInFov.Center;
+				if (dir_vector.MagnitudeSquared() <= ((m_PurgeZoneInFov.Radius+5.f) * (m_PurgeZoneInFov.Radius+5.f)) )
 				{
-					combinedDirection += directionVector;
-						m_WorldState.SetCondition("insidePurgezone", true);
+					m_Target = m_PurgeZoneInFov.Center + dir_vector.GetNormalized() * (m_PurgeZoneInFov.Radius * 1.35f);
+					std::cout << "PurgezoneTarget: " << m_Target << std::endl;
+					m_pBlackboard->ChangeData("PurgeZoneLocation", m_Target);
+					m_WorldState.SetCondition("insidePurgezone", true);
+					return true;
 				}
 			}
 			continue;
 		}
 		break;
-	}
-
-	if (combinedDirection != Elite::ZeroVector2)
-	{
-		m_Target = m_PurgeZoneInFov.Center + combinedDirection.GetNormalized() * (m_PurgeZoneInFov.Radius * 1.3f);
-		std::cout << "Target at: " << m_Target << std::endl;
-		m_pBlackboard->ChangeData("Target", m_Target);
-		return true;
 	}
 	return false;
 }
@@ -300,6 +284,7 @@ void Plugin::CreateBlackboard()
 	m_pBlackboard->AddData("pSteering", m_pSteering);
 	m_pBlackboard->AddData("pInterface", m_pInterface);
 	m_pBlackboard->AddData("deltaTime", m_DeltaTime);
+	m_pBlackboard->AddData("PurgeZoneLocation", Elite::Vector2{});
 
 	// Entities
 	m_pBlackboard->AddData("Houses", m_pMemoryHouse);
@@ -383,8 +368,8 @@ void Plugin::GetNewHousesInFOV(float deltaTime)
 			if (std::find(m_pMemoryHouse->begin(), m_pMemoryHouse->end(), houseInfo) == m_pMemoryHouse->end())
 			{
 				m_pInterface->Draw_Point(houseInfo.Center, 2.0f, { 0,0,1 });
-				houseInfo.topPoint = Elite::Vector2{ houseInfo.Center.x , houseInfo.Center.y + (houseInfo.Size.y / 3) };
-				houseInfo.bottomPoint = Elite::Vector2{ houseInfo.Center.x , houseInfo.Center.y - (houseInfo.Size.y / 3) };
+				houseInfo.topPoint = Elite::Vector2{ houseInfo.Center.x , houseInfo.Center.y + ((houseInfo.Size.y-10) / 3) };
+				houseInfo.bottomPoint = Elite::Vector2{ houseInfo.Center.x , houseInfo.Center.y - ((houseInfo.Size.y-10) / 3) };
 				houseInfo.hasRecentlyBeenLooted = houseInfo.lastSinceTimeVisited < houseInfo.ReactivationTime;
 				houseInfo.Location = houseInfo.Center;
 
@@ -394,7 +379,7 @@ void Plugin::GetNewHousesInFOV(float deltaTime)
 		break;
 	}
 	if (!m_pMemoryHouse->empty())
-		SortEntitiesByDistance(m_pMemoryHouse);
+		SortByDistance(m_pMemoryHouse);
 
 	m_WorldState.SetCondition("houseInRange", !m_pMemoryHouse);
 }
@@ -465,33 +450,8 @@ void Plugin::updateHousesInMemory()
 	{
 		for (auto& house : *m_pMemoryHouse)
 		{
-			//for longer than 10 seconds than you can it to visited
-			if (agentInfo.Position.Distance(house.Center) < 5.f)
-			{
-				house.lastSinceTimeVisited = 0.f;
-				house.hasRecentlyBeenLooted = house.lastSinceTimeVisited < house.ReactivationTime;
-			}
-			else
-			{
-				house.lastSinceTimeVisited += m_DeltaTime;
-				house.hasRecentlyBeenLooted = house.lastSinceTimeVisited < house.ReactivationTime;
-			}
+			house.lastSinceTimeVisited += m_DeltaTime;
+			house.hasRecentlyBeenLooted = house.lastSinceTimeVisited < house.ReactivationTime;
 		}
 	}
-}
-
-template<typename T>
-void Plugin::SortEntitiesByDistance(std::vector<T>* entities)
-{
-	if (entities->empty()) return;
-
-	std::sort(entities->begin(), entities->end(), [&](const T& a, const T& b)
-		{
-			const Elite::Vector2 agentPos{ m_pInterface->Agent_GetInfo().Position };
-	const float distToA{ a.Location.DistanceSquared(agentPos) };
-	const float distToB{ b.Location.DistanceSquared(agentPos) };
-
-	return distToA > distToB;
-		}
-	);
 }

@@ -28,10 +28,11 @@ public:
 private:
 	//Interface, used to request data from/perform actions with the AI Framework
 	IExamInterface* m_pInterface = nullptr;
-	std::vector<HouseInfo> GetHousesInFOV() const;
 	void GetEntitiesInFOV();
-	std::vector<EnemyInfo> GetEnemiesInFOV();
+	void GetNewHousesInFOV(float deltaTime);
+	void GetEnemiesInFOV();
 	bool CheckIfInisdePurgeZone();
+
 
 	Elite::Vector2 m_Target = {};
 
@@ -64,6 +65,7 @@ private:
 
 	//timer
 	float m_DeltaTime = 0.f;
+	float m_TotalElapsedTime = 0.f;
 
 	Elite::Blackboard* m_pBlackboard{};
 	void CreateBlackboard();
@@ -71,14 +73,27 @@ private:
 	void AddActions();
 	void AddGoals();
 
-	void GetNewHousesInFOV(float deltaTime);
 	bool FindingPath(const WorldState& worldState, const WorldState& desiredState, std::vector<BaseGoapAction*>& actions);
 	bool ExecutingPlan();
 	WorldState* GetHighestPriorityGoal();
 
-	template<typename T>
-	void SortEntitiesByDistance(std::vector<T>* entities);
 	void updateHousesInMemory();
+	template<typename T>
+	void SortByDistance(std::vector<T>* entities)
+	{
+		if (entities->empty()) return;
+
+		std::sort(entities->begin(), entities->end(), [&](const T& a, const T& b)
+			{
+				const Elite::Vector2 agentPos{ m_pInterface->Agent_GetInfo().Position };
+		const float distToA{ a.Location.DistanceSquared(agentPos) };
+		const float distToB{ b.Location.DistanceSquared(agentPos) };
+
+		return distToA > distToB;
+			}
+		);
+	}
+
 };
 
 //ENTRY

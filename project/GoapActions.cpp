@@ -32,32 +32,40 @@ bool GOAP::Action_Explore::Execute(Elite::Blackboard* pBlackboard)
 	m_pSeek->setBlackBoard(pBlackboard);
 
 	auto sizeWorld = m_pInterface->World_GetInfo().Dimensions;
-	sizeWorld.y *= 0.5f;
-	sizeWorld.x *= 0.5f;
-
-	m_pInterface->Draw_Circle(m_pInterface->World_GetInfo().Center, sizeWorld.y, { 0,0,0 }, 0.5f);
+	sizeWorld.y *= 0.35f;
+	sizeWorld.x *= 0.35f;
 
 	std::random_device rd;
 	std::default_random_engine generator(rd());
 	std::uniform_real_distribution<float> distributionY(-sizeWorld.y / 2, sizeWorld.y / 2);
 	std::uniform_real_distribution<float> distributionX(-sizeWorld.x / 2, sizeWorld.x / 2);
 
-	float randomYCoord = distributionY(generator);
-	float randomXCoord = distributionX(generator);
-
-	if (m_AgentInfo.Position.Distance(m_OldWanderPost) <= 30.f)
+	float distance{};
+	Elite::Vector2 wanderPos{};
+	do
 	{
-		m_OldWanderPost = Elite::Vector2{ randomXCoord, randomYCoord };
+		float randomYCoord = distributionY(generator);
+		float randomXCoord = distributionX(generator);
+		// Generate a random point
+		wanderPos = Elite::Vector2{ randomYCoord, randomXCoord };
+		//Calculate the distance between the random point and the player
+		distance = Elite::Distance(wanderPos, m_AgentInfo.Position);
+	} while (distance > 100.f);
+
+
+	if (m_AgentInfo.Position.Distance(m_OldWanderPost) <= m_AgentInfo.GrabRange)
+	{
+		m_OldWanderPost = wanderPos;
 	}
 	m_pSeek->SetTarget(m_OldWanderPost);
 	*m_pSteering = *m_pSeek->CalculateSteering(m_AgentInfo);
-	if (m_AgentInfo.Stamina > 4.0f)
+	if (m_AgentInfo.Stamina >= 5.0f)
 		m_pSteering->RunMode = true;
-	else if (m_AgentInfo.Stamina < 4.f)
+	else if (m_AgentInfo.Stamina < 6.f)
 		m_pSteering->RunMode = false;
 
-	//m_pSteering->AutoOrient = false;
-	//m_pSteering->AngularVelocity += m_AgentInfo.MaxAngularSpeed;
+	m_pSteering->AutoOrient = false;
+	m_pSteering->AngularVelocity += m_AgentInfo.MaxAngularSpeed;
 	return false;
 }
 ///////////////////////////////////////
@@ -105,13 +113,13 @@ bool GOAP::Action_MoveTo::Execute(Elite::Blackboard* pBlackboard)
 		}
 
 		m_pSeek->SetTarget(currentVisitPoint);
-		m_pInterface->Draw_Point(currentVisitPoint, 10, { 1,0,0 });
+		//m_pInterface->Draw_Point(currentVisitPoint, 10, { 1,0,0 });
 
-		if (m_AgentInfo.Position.Distance(m_TargetHouse->topPoint) <=m_AgentInfo.GrabRange && currentVisitPoint == m_TargetHouse->topPoint)
+		if (m_AgentInfo.Position.Distance(m_TargetHouse->topPoint) <= m_AgentInfo.GrabRange && currentVisitPoint == m_TargetHouse->topPoint)
 		{
 			m_ArrivedStartSpinTimer += m_DeltaTime;
 			isInHouse = true;
-			if (m_ArrivedStartSpinTimer >= 5.f)
+			if (m_ArrivedStartSpinTimer >= m_MaxSpinTimer)
 			{
 				isInHouse = false;
 				m_ArrivedStartSpinTimer = 0.f;
@@ -124,15 +132,16 @@ bool GOAP::Action_MoveTo::Execute(Elite::Blackboard* pBlackboard)
 
 			m_ArrivedStartSpinTimer += m_DeltaTime;
 			isInHouse = true;
-			if (m_ArrivedStartSpinTimer >= 5.f)
+			m_pSteering->LinearVelocity = Elite::ZeroVector2;
+			if (m_ArrivedStartSpinTimer >= m_MaxSpinTimer)
 			{
-				m_pSteering->LinearVelocity = Elite::ZeroVector2;
 				m_ArrivedStartSpinTimer = 0.f;
 				isInHouse = false;
 				m_TargetHouse->visitedTop = false;
+				m_TargetHouse->lastSinceTimeVisited = 0.f;
+				m_TargetHouse->hasRecentlyBeenLooted = true;
 				return true;
 			}
-			return false;
 		}
 	}
 	else
@@ -150,7 +159,7 @@ bool GOAP::Action_MoveTo::Execute(Elite::Blackboard* pBlackboard)
 	m_pSeek->setBlackBoard(pBlackboard);
 
 	*m_pSteering = *m_pSeek->CalculateSteering(m_AgentInfo);
-	if(isInHouse)
+	if (isInHouse)
 	{
 		m_pSteering->LinearVelocity = Elite::ZeroVector2;
 		m_pSteering->AutoOrient = false;
@@ -174,7 +183,7 @@ GOAP::Action_GrabFood::Action_GrabFood()
 
 	BaseGoapAction::SetPrecondition("targetInRange", true);
 	BaseGoapAction::SetPrecondition("savedFood", true);
-	//BaseGoapAction::SetPrecondition("foodInInv", false);
+	BaseGoapAction::SetPrecondition("foodInInv", false);
 	m_pSeek = new Seek();
 }
 
@@ -256,7 +265,7 @@ GOAP::Action_GrabMedkit::Action_GrabMedkit()
 {
 	BaseGoapAction::SetPrecondition("targetInRange", true);
 	BaseGoapAction::SetPrecondition("savedMedkit", true);
-	//BaseGoapAction::SetPrecondition("medkitInInv", false);
+	BaseGoapAction::SetPrecondition("medkitInInv", false);
 	BaseGoapAction::SetEffect("medkitInInv", true);
 	m_pSeek = new Seek();
 }
@@ -342,7 +351,7 @@ GOAP::Action_GrabPistol::Action_GrabPistol()
 {
 	BaseGoapAction::SetPrecondition("targetInRange", true);
 	BaseGoapAction::SetPrecondition("savedPistol", true);
-	//BaseGoapAction::SetPrecondition("pistolInInv", false);
+	BaseGoapAction::SetPrecondition("pistolInInv", false);
 	BaseGoapAction::SetEffect("pistolInInv", true);
 	m_pSeek = new Seek();
 }
@@ -425,7 +434,7 @@ GOAP::Action_GrabShotGun::Action_GrabShotGun()
 {
 	BaseGoapAction::SetPrecondition("targetInRange", true);
 	BaseGoapAction::SetPrecondition("savedShotgun", true);
-	//BaseGoapAction::SetPrecondition("shotgunInInv", false);
+	BaseGoapAction::SetPrecondition("shotgunInInv", false);
 	BaseGoapAction::SetEffect("shotgunInInv", true);
 	m_pSeek = new Seek();
 }
@@ -811,7 +820,7 @@ bool GOAP::Action_FleePurgezone::checkProceduralPreconditions(Elite::Blackboard*
 {
 	return BaseGoapAction::checkProceduralPreconditions(pBlackboard)
 		&& pBlackboard->GetData("pInterface", m_pInterface)
-		&& pBlackboard->GetData("Target", m_Target)
+		&& pBlackboard->GetData("PurgeZoneLocation", m_Target)
 		&& pBlackboard->GetData("AgentInfo", m_AgentInfo)
 		&& pBlackboard->GetData("pSteering", m_pSteering)
 		&& pBlackboard->GetData("WorldState", m_pWorldState);
@@ -822,7 +831,7 @@ bool GOAP::Action_FleePurgezone::Execute(Elite::Blackboard* pBlackboard)
 	m_pSeek->setInterface(m_pInterface);
 	m_pSeek->SetTarget(m_Target);
 
-	if (m_AgentInfo.Position.DistanceSquared(m_Target) <= (m_AgentInfo.GrabRange / 2))
+	if (m_AgentInfo.Position.Distance(m_Target) <= (m_AgentInfo.GrabRange))
 	{
 		m_pSteering->LinearVelocity = Elite::ZeroVector2;
 		m_pSteering->RunMode = false;

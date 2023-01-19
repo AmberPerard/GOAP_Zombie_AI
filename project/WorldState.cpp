@@ -84,10 +84,9 @@ bool Goal_LootHouse::IsValid(Elite::Blackboard* pBlackboard) const
 	for (auto& house : *houses)
 	{
 		const float dist{ house.Center.Distance(agentInfo.Position) };
-		if (!house.hasRecentlyBeenLooted && dist < closest)
+		if (!house.hasRecentlyBeenLooted && dist < (closest+20.f))
 		{
 			closest = dist;
-				house.Looted = true;
 			if (!pBlackboard->ChangeData("Target", house.Center)) return false;
 			if (!pBlackboard->ChangeData("TargetHouse", &house)) return false;
 		}
@@ -100,7 +99,7 @@ bool Goal_GrabFood::IsValid(Elite::Blackboard* pBlackboard) const
 {
 	WorldState* m_pWorldState;
 	if (!pBlackboard->GetData("WorldState", m_pWorldState)) return false;
-	/*if (m_pWorldState->getCondition("foodInInv")) return false;*/
+	if (m_pWorldState->getCondition("foodInInv")) return false;
 
 	std::vector<EntityInfoExtended>* foods;
 	if (!pBlackboard->GetData("Food", foods) || foods->empty() || foods == nullptr) return false;
@@ -111,7 +110,13 @@ bool Goal_GrabFood::IsValid(Elite::Blackboard* pBlackboard) const
 	AgentInfo agentInfo;
 	if (!pBlackboard->GetData("AgentInfo", agentInfo)) return false;
 
-	if (foods->back().Location.Distance(agentInfo.Position) > 30.f) return false;
+	if (agentInfo.Energy < 3.0f) {
+		if (!pBlackboard->ChangeData("Target", foods->back().Location)) return false;
+		if (!pBlackboard->ChangeData("TargetItem", foods->back())) return false;
+		return true;
+	}
+
+	if (foods->back().Location.Distance(agentInfo.Position) > 100.f) return false;
 
 	if (!pBlackboard->ChangeData("Target", foods->back().Location)) return false;
 	if (!pBlackboard->ChangeData("TargetItem", foods->back())) return false;
@@ -123,7 +128,7 @@ bool Goal_GrabMedkit::IsValid(Elite::Blackboard* pBlackboard) const
 {
 	WorldState* m_pWorldState;
 	if (!pBlackboard->GetData("WorldState", m_pWorldState)) return false;
-	//if (m_pWorldState->getCondition("medkitInInv")) return false;
+	if (m_pWorldState->getCondition("medkitInInv")) return false;
 
 	std::vector<EntityInfoExtended>* medkits;
 	if (!pBlackboard->GetData("Medkits", medkits) || medkits->empty() || medkits == nullptr) return false;
@@ -134,7 +139,13 @@ bool Goal_GrabMedkit::IsValid(Elite::Blackboard* pBlackboard) const
 	AgentInfo agentInfo;
 	if (!pBlackboard->GetData("AgentInfo", agentInfo)) return false;
 
-	if (medkits->back().Location.Distance(agentInfo.Position) > 30.f) return false;
+	if (agentInfo.Health < 3.0f) {
+		if (!pBlackboard->ChangeData("Target", medkits->back().Location)) return false;
+		if (!pBlackboard->ChangeData("TargetItem", medkits->back())) return false;
+		return true;
+	}
+
+	if (medkits->back().Location.Distance(agentInfo.Position) > 100.f) return false;
 
 	if (!pBlackboard->ChangeData("Target", medkits->back().Location)) return false;
 	if (!pBlackboard->ChangeData("TargetItem", medkits->back())) return false;
@@ -146,7 +157,7 @@ bool Goal_GrabPistol::IsValid(Elite::Blackboard* pBlackboard) const
 {
 	WorldState* m_pWorldState;
 	if (!pBlackboard->GetData("WorldState", m_pWorldState)) return false;
-	//if (m_pWorldState->getCondition("pistolInInv")) return false;
+	if (m_pWorldState->getCondition("pistolInInv")) return false;
 
 	std::vector<EntityInfoExtended>* pistols;
 	if (!pBlackboard->GetData("Pistols", pistols) || pistols->empty() || pistols == nullptr) return false;
@@ -157,7 +168,7 @@ bool Goal_GrabPistol::IsValid(Elite::Blackboard* pBlackboard) const
 	AgentInfo agentInfo;
 	if (!pBlackboard->GetData("AgentInfo", agentInfo)) return false;
 
-	if (pistols->back().Location.Distance(agentInfo.Position) > 30.f) return false;
+	if (pistols->back().Location.Distance(agentInfo.Position) > 100.f) return false;
 
 	if (!pBlackboard->ChangeData("Target", pistols->back().Location)) return false;
 	if (!pBlackboard->ChangeData("TargetItem", pistols->back())) return false;
@@ -169,7 +180,7 @@ bool Goal_GrabShotgun::IsValid(Elite::Blackboard* pBlackboard) const
 {
 	WorldState* m_pWorldState;
 	if (!pBlackboard->GetData("WorldState", m_pWorldState)) return false;
-	//if (m_pWorldState->getCondition("shotgunInInv")) return false;
+	if (m_pWorldState->getCondition("shotgunInInv")) return false;
 
 	std::vector<EntityInfoExtended>* shotguns;
 	if (!pBlackboard->GetData("Shotguns", shotguns) || shotguns->empty() || shotguns == nullptr) return false;
@@ -180,7 +191,7 @@ bool Goal_GrabShotgun::IsValid(Elite::Blackboard* pBlackboard) const
 	AgentInfo agentInfo;
 	if (!pBlackboard->GetData("AgentInfo", agentInfo)) return false;
 
-	if (shotguns->back().Location.Distance(agentInfo.Position) > 30.f) return false;
+	if (shotguns->back().Location.Distance(agentInfo.Position) > 100.f) return false;
 
 	if (!pBlackboard->ChangeData("Target", shotguns->back().Location)) return false;
 	if (!pBlackboard->ChangeData("TargetItem", shotguns->back())) return false;
@@ -203,7 +214,7 @@ bool Goal_DestroyGarbage::IsValid(Elite::Blackboard* pBlackboard) const
 	AgentInfo agentInfo;
 	if (!pBlackboard->GetData("AgentInfo", agentInfo)) return false;
 
-	if (garbages->back().Location.Distance(agentInfo.Position) > 30.f) return false;
+	if (garbages->back().Location.Distance(agentInfo.Position) > 100.f) return false;
 
 	if (!pBlackboard->ChangeData("Target", garbages->back().Location)) return false;
 	if (!pBlackboard->ChangeData("TargetItem", garbages->back())) return false;
@@ -232,6 +243,9 @@ bool Goal_FleePurgeZone::IsValid(Elite::Blackboard* pBlackboard) const
 	WorldState* m_pWorldState;
 	if (!pBlackboard->GetData("WorldState", m_pWorldState)) return false;
 
+	Elite::Vector2 m_PurgeZoneLocation;
+	if (!pBlackboard->GetData("PurgeZoneLocation", m_PurgeZoneLocation)) return false;
+
 	return m_pWorldState->getCondition("insidePurgezone");
 
 }
@@ -239,7 +253,8 @@ bool Goal_FleePurgeZone::IsValid(Elite::Blackboard* pBlackboard) const
 bool Goal_ShootEnemies::IsValid(Elite::Blackboard* pBlackboard) const
 {
 	WorldState* m_pWorldState;
-	if (!pBlackboard->GetData("WorldState", m_pWorldState)) return false;
+	if (!pBlackboard->GetData("WorldState", m_pWorldState)) return false;\
+	
 
 	return m_pWorldState->getCondition("inDanger");
 }

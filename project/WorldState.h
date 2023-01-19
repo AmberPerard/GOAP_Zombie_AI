@@ -158,7 +158,6 @@ public:
 	Goal_FleePurgeZone() : WorldState("FleePurgeZone", 1050)
 	{
 		SetCondition("insidePurgezone", false);
-		SetCondition("inDanger", false);
 	}
 	bool IsValid(Elite::Blackboard* pBlackboard) const override;
 };

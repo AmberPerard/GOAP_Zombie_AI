@@ -38,6 +38,7 @@ namespace GOAP
 		HouseInfoExtended* m_TargetHouse;
 		float m_DeltaTime;
 		float m_ArrivedStartSpinTimer;
+		float m_MaxSpinTimer{3.f};
 	};
 	///////////////////////////////////////
 	//GRAB FOOD

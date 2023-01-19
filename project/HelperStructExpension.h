@@ -20,6 +20,9 @@ struct HouseInfoExtended final : HouseInfo
 
 	float lastSinceTimeVisited{ FLT_MAX };
 	float ReactivationTime{ 200.f };
+	float firstEnterTime = 0.f;
+	float maxVisitBeforeFullyVisited = 10.f;
+
 	bool Looted {false};
 	bool hasRecentlyBeenLooted{ lastSinceTimeVisited < ReactivationTime };
 	Elite::Vector2 Location = Center;
