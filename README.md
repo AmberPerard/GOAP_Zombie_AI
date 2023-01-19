@@ -6,7 +6,7 @@ My implementation is on a 2D zombie survival game written by the DAE teachers. T
 
 <div align="center">
   <p align="center">
-  ![](https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/ShowGif.gif)
+  <img src=https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/ShowGif.gif>
   </p>
 </div>
 
@@ -42,8 +42,8 @@ A complex FSM can look like this:
 
 <div align="center">
   <p align="center">
-![](https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/FiniteStateMachine.png)
-[https://hillside.net/plop/plop2003/Papers/Adamczyk-State-Machine.pdf](https://hillside.net/plop/plop2003/Papers/Adamczyk-State-Machine.pdf)
+<img width="440px" src=https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/FiniteStateMachine.png>
+<br>[https://hillside.net/plop/plop2003/Papers/Adamczyk-State-Machine.pdf]
   </p>
 </div>
 
@@ -51,7 +51,7 @@ A complex behavior tree can look like this:
 
 <div align="center">
   <p align="center">
-![](https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/BehaviorTree.png)
+<img src=https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/BehaviorTree.png>
 [https://en.wikipedia.org/wiki/Behavior_tree](https://en.wikipedia.org/wiki/Behavior_tree)
   </p>
 </div>
@@ -60,7 +60,7 @@ GOAP makes the diagrams way less complex, the one I made for my AI looks somethi
 
 <div align="center">
   <p align="center">
-![](https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/GOAP%20Actions.png)
+<img src=https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/GOAP%20Actions.png>
   </p>
 </div>
 
@@ -150,7 +150,7 @@ There would be a better action do sweep the houses and make sure that they are f
 
 <div align="center">
   <p align="center">
-![](https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/SweepingHouse.gif)
+<img src=https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/SweepingHouse.gif>
   </p>
 </div>
 
@@ -158,7 +158,7 @@ Also the wanderer is now a random point in a range of 100.f and that decides whe
 
 <div align="center">
   <p align="center">
-![](https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/RandomWander.gif)
+<img src=https://github.com/Alynxx/GOAP_Zombie_AI/blob/main/ReadMe/RandomWander.gif>
   </p>
 </div>
 
