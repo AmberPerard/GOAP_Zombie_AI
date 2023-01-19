@@ -21,6 +21,8 @@ SteeringPlugin_Output* Seek::CalculateSteering(AgentInfo pAgent)
 	return pSteering;
 }
 
+//Flee
+//****
 SteeringPlugin_Output* Flee::CalculateSteering(AgentInfo pAgent)
 {
 	SteeringPlugin_Output* pSteering{ new SteeringPlugin_Output() };
@@ -32,6 +34,8 @@ SteeringPlugin_Output* Flee::CalculateSteering(AgentInfo pAgent)
 	return pSteering;
 }
 
+//Arrive
+//****
 SteeringPlugin_Output* Arrive::CalculateSteering(AgentInfo pAgent)
 {
 	SteeringPlugin_Output* pSteering{ new SteeringPlugin_Output() };
@@ -58,6 +62,8 @@ SteeringPlugin_Output* Arrive::CalculateSteering(AgentInfo pAgent)
 
 }
 
+//Face
+//****
 SteeringPlugin_Output* Face::CalculateSteering(AgentInfo pAgent)
 {
 	SteeringPlugin_Output* pSteering{ new SteeringPlugin_Output() };
@@ -87,6 +93,8 @@ SteeringPlugin_Output* Face::CalculateSteering(AgentInfo pAgent)
 	return pSteering;
 }
 
+//Wander
+//****
 SteeringPlugin_Output* Wander::CalculateSteering(AgentInfo pAgent)
 {
 	const Vector2 centerPointWanderCirlce{
@@ -117,6 +125,8 @@ void Wander::SetMaxAngleChange(float rad)
 	m_WanderAngle = rad;
 }
 
+//Pursuit
+//****
 SteeringPlugin_Output* Pursuit::CalculateSteering(AgentInfo pAgent)
 {
 	const Vector2 distanceBetween = m_Target.Position - pAgent.Position;
@@ -127,6 +137,8 @@ SteeringPlugin_Output* Pursuit::CalculateSteering(AgentInfo pAgent)
 	return Seek::CalculateSteering(pAgent);
 }
 
+//Evade
+//****
 SteeringPlugin_Output* Evade::CalculateSteering(AgentInfo pAgent)
 {
 	const Vector2 distanceBetween = m_Target.Position - pAgent.Position;
@@ -137,6 +149,8 @@ SteeringPlugin_Output* Evade::CalculateSteering(AgentInfo pAgent)
 	return Flee::CalculateSteering(pAgent);
 }
 
+//Hide
+//****
 SteeringPlugin_Output* Hide::CalculateSteering(AgentInfo pAgent)
 {
 	/* Find the closest hiding spot. */
@@ -164,6 +178,8 @@ SteeringPlugin_Output* Hide::CalculateSteering(AgentInfo pAgent)
 	return  Seek::CalculateSteering(pAgent);
 }
 
+//Interpose
+//****
 SteeringPlugin_Output* Interpose::CalculateSteering(AgentInfo pAgent)
 {
 	//auto midCalcu = m_SecondTarget.Position + m_Target.Position;
@@ -173,6 +189,8 @@ SteeringPlugin_Output* Interpose::CalculateSteering(AgentInfo pAgent)
 	return Seek::CalculateSteering(pAgent);
 }
 
+//AvoidObstacle
+//****
 SteeringPlugin_Output* AvoidObstacle::CalculateSteering(AgentInfo pAgent)
 {
 	float maxahead = 2.f;
@@ -187,12 +205,6 @@ SteeringPlugin_Output* AvoidObstacle::CalculateSteering(AgentInfo pAgent)
 
 			for (int index{ 0 }; index < m_pMemoryHouse->size(); index++)
 			{
-				//float distance = Distance(ahead, m_pMemoryHouse->at(index).Center);
-				//if (distance < disttoclostest)
-				//{
-				//	disttoclostest = distance;
-				//	closestobstacle = &m_pMemoryHouse->at(index);
-				//}
 				float distanceBetweenObstacleAndAi = Distance(m_pMemoryHouse->at(index).Center, pAgent.Position);
 				bool intersecting = Distance(m_pMemoryHouse->at(index).Center, ahead) <= m_pMemoryHouse->at(index).Size.x || Distance(m_pMemoryHouse->at(index).Center, ahead2) <= m_pMemoryHouse->at(index).Size.x + 5;
 				if (distanceBetweenObstacleAndAi < disttoclostest && intersecting)
@@ -220,6 +232,8 @@ SteeringPlugin_Output* AvoidObstacle::CalculateSteering(AgentInfo pAgent)
 	return seekSteering;
 }
 
+//OffsetPursuit
+//****
 SteeringPlugin_Output* OffsetPursuit::CalculateSteering(AgentInfo pAgent)
 {
 	Vector2 displacement = m_Offset - pAgent.Position;

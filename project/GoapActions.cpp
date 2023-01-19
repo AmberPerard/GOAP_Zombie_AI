@@ -469,7 +469,6 @@ bool GOAP::Action_GrabShotGun::Execute(Elite::Blackboard* pBlackboard)
 
 
 	m_pSteering->AutoOrient = false;
-	//m_pSteering->LinearVelocity = Elite::ZeroVector2;
 
 	if (abs(delta_angle) <= m_ErrorAngle)
 	{
@@ -543,7 +542,6 @@ bool GOAP::Action_DestroyGarbage::Execute(Elite::Blackboard* pBlackboard)
 	const Elite::Vector2 directionTarget{ (m_pGarbage->back().Location - m_AgentInfo.Position).GetNormalized() };
 	const Elite::Vector2 directionAgent{ cosf(m_AgentInfo.Orientation),sinf(m_AgentInfo.Orientation) };
 	const float delta_angle = Elite::AngleBetween(directionAgent, directionTarget);
-
 
 	m_pSteering->AutoOrient = false;
 	m_pSteering->LinearVelocity = Elite::ZeroVector2;
@@ -673,7 +671,7 @@ bool GOAP::Action_KillShotGun::Execute(Elite::Blackboard* pBlackboard)
 
 	//stop the autoOrient and stop moving
 	m_pSteering->AutoOrient = false;
-	//m_pSteering->LinearVelocity = Elite::ZeroVector2;
+	m_pSteering->AutoOrient = false;
 
 
 	//update the lastShotTime (need the delta time here)
@@ -682,8 +680,6 @@ bool GOAP::Action_KillShotGun::Execute(Elite::Blackboard* pBlackboard)
 	const Elite::Vector2 directionTarget{ (m_Enemies.back().Location - m_AgentInfo.Position).GetNormalized() };
 	const Elite::Vector2 directionAgent{ cosf(m_AgentInfo.Orientation),sinf(m_AgentInfo.Orientation) };
 
-	//const float targetDirection(VectorToOrientation(directionTarget));
-	//const float agent_angle = m_AgentInfo.Orientation;
 	const float delta_angle = Elite::AngleBetween(directionAgent, directionTarget);
 
 	m_pSteering->LinearVelocity = m_pSeek->CalculateSteering(m_AgentInfo)->LinearVelocity;
@@ -691,11 +687,9 @@ bool GOAP::Action_KillShotGun::Execute(Elite::Blackboard* pBlackboard)
 	// agent is looking at the target
 	if (abs(delta_angle) <= m_AngleError)
 	{
-		//m_pSteering->AutoOrient = true;
 		m_pSteering->AngularVelocity = 0.f;
 
 		if (m_LastShotTime < m_ShootingDelay) return false;
-		//m_pWorldState->SetCondition("in_danger", false);
 
 		m_LastShotTime = 0.f;
 
@@ -764,14 +758,13 @@ bool GOAP::Action_KillPistol::Execute(Elite::Blackboard* pBlackboard)
 
 	//stop the autoOrient and stop moving
 	m_pSteering->AutoOrient = false;
-	//m_pSteering->LinearVelocity = Elite::ZeroVector2;
-
 
 	//update the lastShotTime (need the delta time here)
 	m_LastShotTime += m_DeltaTime;
 
 	const Elite::Vector2 directionTarget{ (m_Enemies.back().Location - m_AgentInfo.Position).GetNormalized() };
 	const Elite::Vector2 directionAgent{ cosf(m_AgentInfo.Orientation),sinf(m_AgentInfo.Orientation) };
+
 	const float delta_angle = Elite::AngleBetween(directionAgent, directionTarget);
 
 	m_pSteering->LinearVelocity = m_pSeek->CalculateSteering(m_AgentInfo)->LinearVelocity;
@@ -788,15 +781,16 @@ bool GOAP::Action_KillPistol::Execute(Elite::Blackboard* pBlackboard)
 		m_LastShotTime = 0.f;
 
 		ItemInfo* weapon{ new ItemInfo() };
-		if (m_pInterface->Inventory_UseItem(0U) &&
-			m_pInterface->Inventory_GetItem(0U, *weapon) &&
+
+		if (m_pInterface->Inventory_GetItem(0U, *weapon) &&
 			m_pInterface->Weapon_GetAmmo(*weapon) <= 0
 			)
 		{
 			m_pInterface->Inventory_RemoveItem(0U);
-			m_pWorldState->SetCondition("pistolInInv", false);
+			m_pWorldState->SetCondition("shotgunInInv", false);
 			return true;
 		}
+		if (m_pInterface->Inventory_UseItem(0U)) return false;
 		return false;
 	}
 

@@ -56,6 +56,7 @@ private:
 	PurgeZoneInfo m_PurgeZoneInFov{};
 
 	// GOAP
+	Elite::Blackboard* m_pBlackboard{};
 	WorldState m_WorldState{};
 	std::vector<BaseGoapAction*> m_pPlan{};
 	std::vector<BaseGoapAction*> m_pActions{};
@@ -67,12 +68,14 @@ private:
 	float m_DeltaTime = 0.f;
 	float m_TotalElapsedTime = 0.f;
 
-	Elite::Blackboard* m_pBlackboard{};
+
+	//Initializing all variables
 	void CreateBlackboard();
 	void InitializeWorldState();
 	void AddActions();
 	void AddGoals();
 
+	//Finding the actions to execute
 	bool FindingPath(const WorldState& worldState, const WorldState& desiredState, std::vector<BaseGoapAction*>& actions);
 	bool ExecutingPlan();
 	WorldState* GetHighestPriorityGoal();

@@ -2,11 +2,6 @@
 #include <map>
 #include "Data/EBlackboard.h"
 
-
-/* In the case of planning, the nodes are states
-of the world, and we are searching to find a path to the goal state.The edges connecting
-different states of the world are the actions that lead the state of the world to change from one
-to another. */
 //base world state
 struct WorldState
 {

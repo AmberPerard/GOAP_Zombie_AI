@@ -78,9 +78,7 @@ SteeringPlugin_Output Plugin::UpdateSteering(float dt)
 {
 	m_TotalElapsedTime += dt;
 	GetEntitiesInFOV();
-	//Get houses in FOV
 	updateHousesInMemory();
-
 	GetNewHousesInFOV(dt);
 	CheckIfInisdePurgeZone();
 	GetEnemiesInFOV();
